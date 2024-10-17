@@ -1,12 +1,20 @@
 package main
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 func main() {
 	app := http.NewServeMux()
 	app.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello, World!"))
+		if _, err := w.Write([]byte("Hello, World!")); err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
 	})
 	
-	http.ListenAndServe(":8080", app)
+	if err := http.ListenAndServe(":8080", app); err != nil {
+		fmt.Printf("Error starting server: %v\n", err)
+	}
 }
