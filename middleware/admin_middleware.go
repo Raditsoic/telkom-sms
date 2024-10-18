@@ -8,7 +8,9 @@ import (
 	"gtihub.com/raditsoic/telkom-storage-ms/utils"
 )
 
-const AdminContextKey = "admin"
+type contextKey string
+
+const AdminContextKey contextKey = "admin"
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
