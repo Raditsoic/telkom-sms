@@ -8,9 +8,7 @@ import (
 	"gtihub.com/raditsoic/telkom-storage-ms/utils"
 )
 
-type contextKey string
-
-const UserContextKey = "admin"
+const AdminContextKey = "admin"
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -34,7 +32,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), UserContextKey, claims)
+		ctx := context.WithValue(r.Context(), AdminContextKey, claims)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
