@@ -2,6 +2,8 @@ module gtihub.com/raditsoic/telkom-storage-ms
 
 go 1.22.5
 
+require github.com/joho/godotenv v1.5.1
+
 require (
 	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -10,6 +12,7 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/rs/cors v1.11.1 // indirect
 	golang.org/x/crypto v0.28.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/text v0.19.0 // indirect

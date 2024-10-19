@@ -5,4 +5,5 @@ type Item struct {
 	Name       string `json:"name"`
 	Quantity   int    `json:"quantity"`
 	CategoryID uint   `json:"category_id"`
+	StorageID  uint   `json:"storage_id"`
 }
