@@ -7,6 +7,11 @@ type Category struct {
 	Items     []Item `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"items"`
 }
 
+type CategoryWithStorage struct {
+	Category
+	Storage Storage `json:"storage"`
+}
+	
 /*
 {
     "name":"Pulpen",

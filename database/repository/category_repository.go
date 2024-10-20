@@ -48,6 +48,20 @@ func GetCategories() ([]model.Category, error) {
 	return categories, nil
 }
 
+func GetCategoriesWithStorage() ([]model.CategoryWithStorage, error) {
+	db, err := database.Connect()
+	if err != nil {
+		return []model.CategoryWithStorage{}, fmt.Errorf("failed to connect to database: %v", err)
+	}
+
+	var categories []model.CategoryWithStorage
+	if err := db.Preload("Storage").Find(&categories).Error; err != nil {
+		return nil, fmt.Errorf("failed to get categories: %v", err)
+	}
+
+	return categories, nil
+}
+
 func UpdateCategory(category model.Category) error {
 	db, err := database.Connect()
 	if err != nil {

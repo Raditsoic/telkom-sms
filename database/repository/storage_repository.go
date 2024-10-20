@@ -53,7 +53,7 @@ func GetStorages() ([]model.Storage, error) {
 	}
 
 	var storages []model.Storage
-	if err := db.Find(&storages).Error; err != nil {
+	if err := db.Preload("Categories").Find(&storages).Error; err != nil {
 		return nil, fmt.Errorf("failed to get storages: %v", err)
 	}
 
