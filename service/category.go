@@ -8,44 +8,44 @@ import (
 	"gtihub.com/raditsoic/telkom-storage-ms/model"
 )
 
-func GetItems(w http.ResponseWriter, r *http.Request) {
+func GetCategories(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	items, err := repository.GetItems()
+	categories, err := repository.GetCategories()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(items); err != nil {
+	if err := json.NewEncoder(w).Encode(categories); err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
 
-func CreateItem(w http.ResponseWriter, r *http.Request) {
+func CreateCategory(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	var item model.Item
-	if err := json.NewDecoder(r.Body).Decode(&item); err != nil {
+	var category model.Category
+	if err := json.NewDecoder(r.Body).Decode(&category); err != nil {
 		http.Error(w, "Invalid request body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if err := repository.CreateItem(item); err != nil {
-		http.Error(w, "Failed to create item: "+err.Error(), http.StatusInternalServerError)
+	if err := repository.CreateCategory(category); err != nil {
+		http.Error(w, "Failed to create category: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json")
-	response := map[string]string{"message": "Item created successfully"}
+	response := map[string]string{"message": "Category created successfully"}
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		http.Error(w, "Failed to encode response: "+err.Error(), http.StatusInternalServerError)
 	}

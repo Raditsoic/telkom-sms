@@ -20,7 +20,6 @@ func CreateStorage(storage model.Storage) error {
 	return nil
 }
 
-
 func GetStorageByID(id int) (*model.Storage, error) {
 	db, err := database.Connect()
 	if err != nil {
@@ -28,10 +27,22 @@ func GetStorageByID(id int) (*model.Storage, error) {
 	}
 
 	var storage model.Storage
-	if err := db.Where("id = ?", id).First(&storage).Error; err != nil {
-		return nil, fmt.Errorf("failed to get storage: %v", err)
+	if err := db.First(&storage, id).Error; err != nil {
+		return &model.Storage{}, fmt.Errorf("failed to get storage: %v", err)
+	}
+	return &storage, nil
+}
+
+func GetStorageByIDwithCategories(id int) (*model.Storage, error) {
+	db, err := database.Connect()
+	if err != nil {
+		return &model.Storage{}, fmt.Errorf("failed to connect to database: %v", err)
 	}
 
+	var storage model.Storage
+	if err := db.Preload("Categories.Items").First(&storage, id).Error; err != nil {
+		return &storage, err
+	}
 	return &storage, nil
 }
 

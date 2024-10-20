@@ -3,7 +3,9 @@ package service
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
+	"github.com/gorilla/mux"
 	"gtihub.com/raditsoic/telkom-storage-ms/database/repository"
 	"gtihub.com/raditsoic/telkom-storage-ms/model"
 )
@@ -54,5 +56,28 @@ func CreateStorage(w http.ResponseWriter, r *http.Request) {
 	response := map[string]string{"message": "Storage created successfully"}
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		http.Error(w, "Failed to encode response: "+err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func GetStorageByID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idStr := vars["id"]
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid ID format", http.StatusBadRequest)
+		return
+	}
+
+	storage, err := repository.GetStorageByIDwithCategories(id)
+	if err != nil {
+		http.Error(w, "Failed to retrieve storage: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(storage); err != nil {
+		http.Error(w, "Failed to encode response: "+err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
