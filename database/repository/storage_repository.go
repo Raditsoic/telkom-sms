@@ -3,11 +3,20 @@ package repository
 import (
 	"fmt"
 
+	"gorm.io/gorm"
 	"gtihub.com/raditsoic/telkom-storage-ms/database"
 	"gtihub.com/raditsoic/telkom-storage-ms/model"
 )
 
-func CreateStorage(storage model.Storage) error {
+type StorageRepository struct {
+	db *gorm.DB
+}
+
+func NewStorageRepository(db *gorm.DB) *StorageRepository {
+	return &StorageRepository{db: db}
+}
+
+func (repo *StorageRepository) CreateStorage(storage model.Storage) error {
 	db, err := database.Connect()
 	if err != nil {
 		return fmt.Errorf("failed to connect to database: %v", err)
@@ -20,7 +29,7 @@ func CreateStorage(storage model.Storage) error {
 	return nil
 }
 
-func GetStorageByID(id int) (*model.Storage, error) {
+func (repo *StorageRepository) GetStorageByID(id int) (*model.Storage, error) {
 	db, err := database.Connect()
 	if err != nil {
 		return &model.Storage{}, fmt.Errorf("failed to connect to database: %v", err)
@@ -33,7 +42,7 @@ func GetStorageByID(id int) (*model.Storage, error) {
 	return &storage, nil
 }
 
-func GetStorageByIDwithCategories(id int) (*model.Storage, error) {
+func (repo *StorageRepository) GetStorageByIDwithCategories(id int) (*model.Storage, error) {
 	db, err := database.Connect()
 	if err != nil {
 		return &model.Storage{}, fmt.Errorf("failed to connect to database: %v", err)
@@ -46,7 +55,7 @@ func GetStorageByIDwithCategories(id int) (*model.Storage, error) {
 	return &storage, nil
 }
 
-func GetStorages() ([]model.Storage, error) {
+func (repo *StorageRepository) GetStorages() ([]model.Storage, error) {
 	db, err := database.Connect()
 	if err != nil {
 		return []model.Storage{}, fmt.Errorf("failed to connect to database: %v", err)
@@ -60,7 +69,7 @@ func GetStorages() ([]model.Storage, error) {
 	return storages, nil
 }
 
-func UpdateStorage(storage model.Storage) error {
+func (repo *StorageRepository) UpdateStorage(storage model.Storage) error {
 	db, err := database.Connect()
 	if err != nil {
 		return fmt.Errorf("failed to connect to database: %v", err)
@@ -73,7 +82,7 @@ func UpdateStorage(storage model.Storage) error {
 	return nil
 }
 
-func DeleteStorage(id int) error {
+func (repo *StorageRepository) DeleteStorage(id int) error {
 	db, err := database.Connect()
 	if err != nil {
 		return fmt.Errorf("failed to connect to database: %v", err)
@@ -85,4 +94,3 @@ func DeleteStorage(id int) error {
 
 	return nil
 }
-

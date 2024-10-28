@@ -1,18 +1,44 @@
 package repository
 
 import (
+	"errors"
 	"fmt"
 
+	"gorm.io/gorm"
 	"gtihub.com/raditsoic/telkom-storage-ms/database"
 	"gtihub.com/raditsoic/telkom-storage-ms/model"
 )
 
-func CreateCategory(category model.Category) error {
+type CategoryWithStorage struct {
+	CategoryID   uint   `json:"category_id"`
+	CategoryName string `json:"category_name"`
+	StorageName  string `json:"storage_name"`
+}
+
+type CategoryRepository struct {
+	db *gorm.DB
+}
+
+func NewCategoryRepository(db *gorm.DB) *CategoryRepository {
+	return &CategoryRepository{db: db}
+}
+
+func (repo *CategoryRepository) CreateCategory(category model.Category) error {
 	db, err := database.Connect()
 	if err != nil {
 		return fmt.Errorf("failed to connect to database: %v", err)
 	}
 
+	// Check if storage exists
+	var storage model.Storage
+	if err := db.First(&storage, category.StorageID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("storage with ID %d not found", category.StorageID)
+		}
+		return fmt.Errorf("failed to check storage: %v", err)
+	}
+
+	// Create category
 	if err := db.Create(&category).Error; err != nil {
 		return fmt.Errorf("failed to create category: %v", err)
 	}
@@ -20,7 +46,7 @@ func CreateCategory(category model.Category) error {
 	return nil
 }
 
-func GetCategoryByID(id int) (*model.Category, error) {
+func (repo *CategoryRepository) GetCategoryByID(id int) (*model.Category, error) {
 	db, err := database.Connect()
 	if err != nil {
 		return &model.Category{}, fmt.Errorf("failed to connect to database: %v", err)
@@ -34,35 +60,31 @@ func GetCategoryByID(id int) (*model.Category, error) {
 	return &category, nil
 }
 
-func GetCategories() ([]model.Category, error) {
-	db, err := database.Connect()
-	if err != nil {
-		return []model.Category{}, fmt.Errorf("failed to connect to database: %v", err)
-	}
-
+func (repo *CategoryRepository) GetCategories(limit, offset int) ([]model.Category, error) {
 	var categories []model.Category
-	if err := db.Find(&categories).Error; err != nil {
-		return nil, fmt.Errorf("failed to get categories: %v", err)
-	}
+
+	if err := repo.db.Preload("Storage").Limit(limit).Offset(offset).Find(&categories).Error; err != nil {
+        return nil, fmt.Errorf("failed to get categories: %v", err)
+    }
 
 	return categories, nil
 }
 
-func GetCategoriesWithStorage() ([]model.CategoryWithStorage, error) {
-	db, err := database.Connect()
-	if err != nil {
-		return []model.CategoryWithStorage{}, fmt.Errorf("failed to connect to database: %v", err)
-	}
+// func (repo *CategoryRepository) GetCategoriesWithStorage() ([]model.CategoryWithStorage, error) {
+// 	db, err := database.Connect()
+// 	if err != nil {
+// 		return []model.CategoryWithStorage{}, fmt.Errorf("failed to connect to database: %v", err)
+// 	}
 
-	var categories []model.CategoryWithStorage
-	if err := db.Preload("Storage").Find(&categories).Error; err != nil {
-		return nil, fmt.Errorf("failed to get categories: %v", err)
-	}
+// 	var categories []model.CategoryWithStorage
+// 	if err := db.Preload("Storage").Find(&categories).Error; err != nil {
+// 		return nil, fmt.Errorf("failed to get categories: %v", err)
+// 	}
 
-	return categories, nil
-}
+// 	return categories, nil
+// }
 
-func UpdateCategory(category model.Category) error {
+func (repo *CategoryRepository) UpdateCategory(category model.Category) error {
 	db, err := database.Connect()
 	if err != nil {
 		return fmt.Errorf("failed to connect to database: %v", err)
@@ -75,7 +97,7 @@ func UpdateCategory(category model.Category) error {
 	return nil
 }
 
-func DeleteCategory(id int) error {
+func (repo *CategoryRepository) DeleteCategory(id int) error {
 	db, err := database.Connect()
 	if err != nil {
 		return fmt.Errorf("failed to connect to database: %v", err)
@@ -87,4 +109,3 @@ func DeleteCategory(id int) error {
 
 	return nil
 }
-

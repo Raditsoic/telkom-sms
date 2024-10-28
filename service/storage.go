@@ -2,82 +2,57 @@ package service
 
 import (
 	"encoding/json"
-	"net/http"
-	"strconv"
 
-	"github.com/gorilla/mux"
 	"gtihub.com/raditsoic/telkom-storage-ms/database/repository"
 	"gtihub.com/raditsoic/telkom-storage-ms/model"
 )
 
+type StorageService struct {
+	repository repository.StorageRepository
+}
+
+func NewStorageService(repo repository.StorageRepository) *StorageService {
+	return &StorageService{repository: repo}
+}
+
 // GetStorages handles GET requests to retrieve storage items.
-func GetStorages(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	storages, err := repository.GetStorages()
-	if err != nil {
-		http.Error(w, "Failed to retrieve storages: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Set the content type header and encode storages to JSON
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(storages); err != nil {
-		http.Error(w, "Failed to encode response: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
+func (service *StorageService) GetStorages() ([]model.Storage, error) {
+	return service.repository.GetStorages()
 }
 
 // CreateStorage handles POST requests to create a new storage item.
-func CreateStorage(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
+func (service *StorageService) CreateStorage(storageData []byte) (*model.Storage, error) {
 	var storage model.Storage
-	if err := json.NewDecoder(r.Body).Decode(&storage); err != nil {
-		http.Error(w, "Invalid request body: "+err.Error(), http.StatusBadRequest)
-		return
+	if err := json.Unmarshal(storageData, &storage); err != nil {
+		return nil, err
 	}
 
-	// Call the repository to create the storage item
-	if err := repository.CreateStorage(storage); err != nil {
-		http.Error(w, "Failed to create storage: "+err.Error(), http.StatusInternalServerError)
-		return
+	if err := service.repository.CreateStorage(storage); err != nil {
+		return nil, err
 	}
 
-	// Respond with 201 Created status
-	w.WriteHeader(http.StatusCreated)
-	w.Header().Set("Content-Type", "application/json")
-	response := map[string]string{"message": "Storage created successfully"}
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "Failed to encode response: "+err.Error(), http.StatusInternalServerError)
-	}
+	return &storage, nil
 }
 
-func GetStorageByID(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	idStr := vars["id"]
+// func (service *StorageService) GetStorageByID(w http.ResponseWriter, r *http.Request) {
+// 	vars := mux.Vars(r)
+// 	idStr := vars["id"]
 
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		http.Error(w, "Invalid ID format", http.StatusBadRequest)
-		return
-	}
+// 	id, err := strconv.Atoi(idStr)
+// 	if err != nil {
+// 		http.Error(w, "Invalid ID format", http.StatusBadRequest)
+// 		return
+// 	}
 
-	storage, err := repository.GetStorageByIDwithCategories(id)
-	if err != nil {
-		http.Error(w, "Failed to retrieve storage: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
+// 	storage, err := repository.GetStorageByIDwithCategories(id)
+// 	if err != nil {
+// 		http.Error(w, "Failed to retrieve storage: "+err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(storage); err != nil {
-		http.Error(w, "Failed to encode response: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
+// 	w.Header().Set("Content-Type", "application/json")
+// 	if err := json.NewEncoder(w).Encode(storage); err != nil {
+// 		http.Error(w, "Failed to encode response: "+err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+// }
