@@ -20,10 +20,6 @@ func main() {
 		log.Fatalf("failed to connect database: %v", err)
 	}
 
-	if err := db.AutoMigrate(&model.Admin{}, &model.Storage{}, &model.Item{}, &model.Category{}); err != nil {
-		log.Fatalf("Could not migrate: %v", err)
-	}
-
 	CategoryRepository := repository.NewCategoryRepository(db)
 	categoryService := service.NewCategoryService(*CategoryRepository)
 	StorageRepository := repository.NewStorageRepository(db)
@@ -40,7 +36,10 @@ func main() {
 	}).Methods("GET")
 
 	// Admin routes
-	r.HandleFunc("/api/admin", service.AdminLogin).Methods("POST")
+	r.HandleFunc("/api/admin/register", service.AdminRegister).Methods("POST")
+	r.HandleFunc("/api/admin/login", service.AdminLogin).Methods("POST")
+	r.HandleFunc("/api/admins", service.GetAdmin).Methods("GET")      // Endpoint testing Jgn lupa dihapus klo udha mau prod
+	r.HandleFunc("/api/admin", service.DeleteAdmin).Methods("DELETE") // Endpoint testing Jgn lupa dihapus klo udha mau prod
 
 	// Item routes
 	r.HandleFunc("/api/items", service.GetItems).Methods("GET")
@@ -64,7 +63,7 @@ func main() {
 		var category model.Category
 		if err := json.NewDecoder(r.Body).Decode(&category); err != nil {
 			http.Error(w, "Invalid request body", http.StatusBadRequest)
-			return
+			return	
 		}
 		defer r.Body.Close()
 
@@ -73,6 +72,7 @@ func main() {
 			http.Error(w, "Failed to marshal category", http.StatusInternalServerError)
 			return
 		}
+		fmt.Println(categoryData)
 		createdCategory, err := categoryService.CreateCategory(categoryData)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

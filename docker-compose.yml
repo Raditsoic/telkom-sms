@@ -1,0 +1,35 @@
+version: "3"
+
+services:
+    sms-backend:
+        build: .
+        ports:
+            - "8080:8080"
+        restart: on-failure
+        env_file: .env
+        volumes:
+            - .:/usr/src/app
+        depends_on:
+            - psql
+        networks:
+            - main_network
+
+    psql:
+        image: postgres:latest
+        hostname: ${DB_HOST}
+        environment:
+            POSTGRES_USER: ${DB_USER}
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+            POSTGRES_DB: ${DB_NAME}
+        ports:
+            - "5432:5432"
+        volumes:
+            - db_postgres:/var/lib/postgresql/data
+        networks:
+            - main_network
+
+volumes:
+    db_postgres:
+
+networks:
+    main_network:
