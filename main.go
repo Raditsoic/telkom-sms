@@ -57,7 +57,10 @@ func main() {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(categories)
+		if err := json.NewEncoder(w).Encode(categories); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			return
+		}
 	}).Methods("GET")
 	r.HandleFunc("/api/category", func(w http.ResponseWriter, r *http.Request) {
 		var category model.Category
@@ -80,7 +83,10 @@ func main() {
 		}
 
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(createdCategory)
+		if err := json.NewEncoder(w).Encode(createdCategory); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			return
+		}
 	}).Methods("POST")
 
 	// Storage routes
@@ -104,7 +110,10 @@ func main() {
 		}
 
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(createdStorage)
+		if err := json.NewEncoder(w).Encode(createdStorage); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			return
+		}
 	}).Methods("POST")
 	r.HandleFunc("/api/storages", func(w http.ResponseWriter, r *http.Request) {
 		storages, err := StorageService.GetStorages()
@@ -114,7 +123,10 @@ func main() {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(storages)
+		if err := json.NewEncoder(w).Encode(storages); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			return
+		}
 	}).Methods("GET")
 	// r.HandleFunc("/api/storage/{id}", service.GetStorageByID).Methods("GET")
 
