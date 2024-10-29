@@ -98,7 +98,7 @@ func GetAdmin(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(admins); err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-	}	
+	}
 }
 
 func DeleteAdmin(w http.ResponseWriter, r *http.Request) {
