@@ -22,8 +22,12 @@ func main() {
 
 	CategoryRepository := repository.NewCategoryRepository(db)
 	categoryService := service.NewCategoryService(*CategoryRepository)
+
 	StorageRepository := repository.NewStorageRepository(db)
 	StorageService := service.NewStorageService(*StorageRepository)
+
+	ItemRepository := repository.NewItemRepository(db)
+	itemService := service.NewItemService(*ItemRepository)
 
 	r := mux.NewRouter()
 
@@ -42,8 +46,63 @@ func main() {
 	r.HandleFunc("/api/admin", service.DeleteAdmin).Methods("DELETE") // Endpoint testing Jgn lupa dihapus klo udha mau prod
 
 	// Item routes
-	r.HandleFunc("/api/items", service.GetItems).Methods("GET")
-	r.HandleFunc("/api/item", service.CreateItem).Methods("POST")
+	r.HandleFunc("/api/items", func(w http.ResponseWriter, r *http.Request) {
+		page := r.URL.Query().Get("page")
+		limit := r.URL.Query().Get("limit")
+
+		items, err := itemService.GetItems(page, limit)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(items); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			return
+		}
+	}).Methods("GET")
+	r.HandleFunc("/api/item", func(w http.ResponseWriter, r *http.Request) {
+		var item model.Item
+		if err := json.NewDecoder(r.Body).Decode(&item); err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+		defer r.Body.Close()
+
+		newItem, err := json.Marshal(item)
+		if err != nil {
+			http.Error(w, "Failed to marshal category", http.StatusInternalServerError)
+			return
+		}
+		fmt.Println(newItem)
+		createdCategory, err := categoryService.CreateCategory(newItem)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusCreated)
+		if err := json.NewEncoder(w).Encode(createdCategory); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			return
+		}
+	}).Methods("POST")
+	r.HandleFunc("/api/item/{id}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["id"] 
+
+		item, err := itemService.GetItemByID(id)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(item); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		}
+	}).Methods("GET")
 
 	// Category routes
 	r.HandleFunc("/api/categories", func(w http.ResponseWriter, r *http.Request) {
@@ -66,17 +125,16 @@ func main() {
 		var category model.Category
 		if err := json.NewDecoder(r.Body).Decode(&category); err != nil {
 			http.Error(w, "Invalid request body", http.StatusBadRequest)
-			return	
+			return
 		}
 		defer r.Body.Close()
 
-		categoryData, err := json.Marshal(category)
+		newCategory, err := json.Marshal(category)
 		if err != nil {
 			http.Error(w, "Failed to marshal category", http.StatusInternalServerError)
 			return
 		}
-		fmt.Println(categoryData)
-		createdCategory, err := categoryService.CreateCategory(categoryData)
+		createdCategory, err := categoryService.CreateCategory(newCategory)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
