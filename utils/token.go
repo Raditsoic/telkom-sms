@@ -19,7 +19,7 @@ func init() {
 }
 
 type Claims struct {
-	ID   string `json:"id"`
+	ID string `json:"id"`
 	jwt.RegisteredClaims
 }
 
@@ -27,7 +27,7 @@ func GenerateJWT(id uint) (string, error) {
 	expirationTime := time.Now().Add(1 * time.Hour)
 
 	claims := &Claims{
-		ID:   fmt.Sprintf("%d", id),
+		ID: fmt.Sprintf("%d", id),
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -38,7 +38,7 @@ func GenerateJWT(id uint) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(jwtSecret)
 	if err != nil {
-		return "", fmt.Errorf("failed to generate token: %v", err)
+		return "", fmt.Errorf("failed to generate token: %w", err)
 	}
 	return tokenString, nil
 }
@@ -49,12 +49,12 @@ func VerifyToken(token string) (*Claims, error) {
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("invalid token: %v", err)
+		return nil, fmt.Errorf("invalid token: %w", err)
 	}
 
 	if claims, ok := parsedToken.Claims.(*Claims); ok && parsedToken.Valid {
 		return claims, nil
 	}
 
-	return nil, fmt.Errorf("invalid token: %v", err)
+	return nil, fmt.Errorf("invalid token: %w", err)
 }

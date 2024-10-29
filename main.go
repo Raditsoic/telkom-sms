@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -70,34 +71,28 @@ func main() {
 		}
 		defer r.Body.Close()
 
-		newItem, err := json.Marshal(item)
-		if err != nil {
-			http.Error(w, "Failed to marshal category", http.StatusInternalServerError)
-			return
-		}
-		fmt.Println(newItem)
-		createdCategory, err := categoryService.CreateCategory(newItem)
+		createdItem, err := itemService.CreateItem(&item)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		w.WriteHeader(http.StatusCreated)
-		if err := json.NewEncoder(w).Encode(createdCategory); err != nil {
+		if err := json.NewEncoder(w).Encode(createdItem); err != nil {
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 			return
 		}
 	}).Methods("POST")
 	r.HandleFunc("/api/item/{id}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		id := vars["id"] 
+		id := vars["id"]
 
 		item, err := itemService.GetItemByID(id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-	
+
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(item); err != nil {
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
@@ -146,6 +141,43 @@ func main() {
 			return
 		}
 	}).Methods("POST")
+	r.HandleFunc("/api/category/{id}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["id"]
+
+		category, err := categoryService.GetCategoryByID(id)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(category); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		}
+	}).Methods("GET")
+	r.HandleFunc("/api/category/{id}/items", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		idStr := vars["id"]
+
+		categoryID, err := strconv.ParseUint(idStr, 10, 32)
+		if err != nil {
+			http.Error(w, "Invalid category ID", http.StatusBadRequest)
+			return
+		}
+
+		category, err := categoryService.GetCategoryWithItems(uint(categoryID))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Set the response header and return the category with items
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(category); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		}
+	}).Methods("GET")
 
 	// Storage routes
 	r.HandleFunc("/api/storage", func(w http.ResponseWriter, r *http.Request) {

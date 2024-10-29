@@ -16,7 +16,7 @@ func NewCategoryService(repo repository.CategoryRepository) *CategoryService {
 	return &CategoryService{repository: repo}
 }
 
-func (s *CategoryService) GetCategories(pageParam, limitParam string) ([]model.Category, error) {
+func (s *CategoryService) GetCategories(pageParam, limitParam string) ([]model.AllCategoryResponse, error) {
 	page, limit := 1, 10
 
 	if parsedPage, err := strconv.Atoi(pageParam); err == nil && parsedPage > 0 {
@@ -41,4 +41,24 @@ func (s *CategoryService) CreateCategory(categoryData []byte) (*model.Category, 
 	}
 
 	return &category, nil
+}
+
+func (s *CategoryService) GetCategoryByID(id string) (*model.CategoryByIDResponse, error) {
+	return s.repository.GetCategoryByID(id)
+}
+
+func (service *CategoryService) GetCategoryWithItems(categoryID uint) (*model.CategoryWithItemsResponse, error) {
+    category, err := service.repository.GetCategoryWithItems(categoryID)
+    if err != nil {
+        return nil, err
+    }
+
+    response := &model.CategoryWithItemsResponse{
+        ID:        category.ID,
+        Name:      category.Name,
+        StorageID: category.StorageID,
+        Items:     category.Items,
+    }
+
+    return response, nil
 }

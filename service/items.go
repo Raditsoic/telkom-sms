@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"strconv"
 
 	"gtihub.com/raditsoic/telkom-storage-ms/database/repository"
@@ -30,18 +29,13 @@ func (service *ItemService) GetItems(pageParam, limitParam string) ([]model.Item
 	return service.repository.GetItems(limit, offset)
 }
 
-func (service *ItemService) CreateItem(newItem []byte) (*model.Item, error) {
-	var item model.Item
-
-	if err := json.Unmarshal(newItem, &item); err != nil {
-		return nil, err
-	}
-
+func (service *ItemService) CreateItem(item *model.Item) (*model.Item, error) {
+	// Use GORM to create the item in the database
 	if err := service.repository.CreateItem(item); err != nil {
 		return nil, err
 	}
 
-	return &item, nil
+	return item, nil
 }
 
 func (service *ItemService) GetItemByID(id string) (*model.Item, error) {

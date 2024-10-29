@@ -27,7 +27,7 @@ func Connect() (*gorm.DB, error) {
 		dbUser, dbPass, dbHost, dbPort, dbName)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect database: %v", err)
+		return nil, fmt.Errorf("failed to connect database: %w", err)
 	}
 
 	if err := db.AutoMigrate(&model.Admin{}, &model.Storage{}, &model.Item{}, &model.Category{}); err != nil {
