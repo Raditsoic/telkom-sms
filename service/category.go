@@ -62,3 +62,12 @@ func (service *CategoryService) GetCategoryWithItems(categoryID uint) (*model.Ca
 
 	return response, nil
 }
+
+func (service *CategoryService) DeleteCategory(id int) error {
+	_, err := service.repository.GetCategoryByID(strconv.Itoa(id))
+	if err != nil {
+		return err
+	}
+
+	return service.repository.DeleteCategory(id)
+}

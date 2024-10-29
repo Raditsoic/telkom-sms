@@ -197,6 +197,26 @@ func main() {
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		}
 	}).Methods("GET")
+	r.HandleFunc("/api/category/{id}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["id"]
+
+		idInt, err := strconv.Atoi(id)
+		if err != nil {
+			http.Error(w, "Invalid category ID", http.StatusBadRequest)
+			return
+		}
+		if err := categoryService.DeleteCategory(idInt); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode("Category deleted"); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			return
+		}
+	}).Methods("DELETE")
 
 	// Storage routes
 	r.HandleFunc("/api/storage", func(w http.ResponseWriter, r *http.Request) {
@@ -237,6 +257,26 @@ func main() {
 			return
 		}
 	}).Methods("GET")
+	r.HandleFunc("/api/storage/{id}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["id"]
+		idInt, err := strconv.Atoi(id)
+		if err != nil {
+			http.Error(w, "Invalid storage ID", http.StatusBadRequest)
+			return
+		}
+
+		if err := StorageService.DeleteStorage(idInt); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode("Item deleted"); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			return
+		}
+	}).Methods("DELETE")
 	// r.HandleFunc("/api/storage/{id}", service.GetStorageByID).Methods("GET")
 
 	// Transaction routes
