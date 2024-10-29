@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -29,6 +30,9 @@ func main() {
 
 	ItemRepository := repository.NewItemRepository(db)
 	itemService := service.NewItemService(*ItemRepository)
+
+	TransactionRepository := repository.NewTransactionRepository(db)
+	TransactionService := service.NewTransactionService(*TransactionRepository, *ItemRepository)
 
 	r := mux.NewRouter()
 
@@ -98,6 +102,21 @@ func main() {
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		}
 	}).Methods("GET")
+	r.HandleFunc("/api/item/{id}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["id"]
+
+		if err := itemService.DeleteItem(id); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode("Item deleted"); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			return
+		}
+	}).Methods("DELETE")
 
 	// Category routes
 	r.HandleFunc("/api/categories", func(w http.ResponseWriter, r *http.Request) {
@@ -219,6 +238,78 @@ func main() {
 		}
 	}).Methods("GET")
 	// r.HandleFunc("/api/storage/{id}", service.GetStorageByID).Methods("GET")
+
+	// Transaction routes
+	r.HandleFunc("/api/transaction", func(w http.ResponseWriter, r *http.Request) {
+		var req model.TransactionRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		transaction, err := TransactionService.CreateTransaction(&req)
+		if err != nil {
+			switch {
+			case strings.Contains(err.Error(), "item not found"):
+				http.Error(w, err.Error(), http.StatusNotFound)
+			case strings.Contains(err.Error(), "insufficient quantity"):
+				http.Error(w, err.Error(), http.StatusBadRequest)
+			case strings.Contains(err.Error(), "invalid transaction type"):
+				http.Error(w, err.Error(), http.StatusBadRequest)
+			default:
+				http.Error(w, "Internal server error", http.StatusInternalServerError)
+			}
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		if err := json.NewEncoder(w).Encode(transaction); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			return
+		}
+	}).Methods("POST")
+	r.HandleFunc("/api/transactions", func(w http.ResponseWriter, r *http.Request) {
+		page := r.URL.Query().Get("page")
+		limit := r.URL.Query().Get("limit")
+
+		transactions, err := TransactionService.GetTransactions(page, limit)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(transactions); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			return
+		}
+	}).Methods("GET")
+	r.HandleFunc("/api/transaction/{id}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		idStr := vars["id"]
+
+		transactionID, err := strconv.ParseUint(idStr, 10, 32)
+		if err != nil {
+			http.Error(w, "Invalid transaction ID", http.StatusBadRequest)
+			return
+		}
+
+		transaction, err := TransactionService.GetTransactionByID(uint(transactionID))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(transaction); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		}
+	}).Methods("GET")
+	// r.HandleFunc("/api/transaction/{id}", func(w http.ResponseWriter, r *http.Request) {
+	// 	vars := mux.Vars(r)
+	// 	id := vars["id"]
+	// }).Methods("PUT")
 
 	// CORS configuration
 	c := cors.New(cors.Options{

@@ -3,71 +3,55 @@ package repository
 import (
 	"fmt"
 
-	"gtihub.com/raditsoic/telkom-storage-ms/database"
+	"gorm.io/gorm"
 	"gtihub.com/raditsoic/telkom-storage-ms/model"
 )
 
-func CreateTransaction(transaction model.Transaction) error {
-	db, err := database.Connect()
-	if err != nil {
-		return fmt.Errorf("failed to connect to database: %w", err)
-	}
+type TransactionRepository struct {
+	db *gorm.DB
+}
 
-	if err := db.Create(&transaction).Error; err != nil {
+func NewTransactionRepository(db *gorm.DB) *TransactionRepository {
+	return &TransactionRepository{db: db}
+}
+
+func (repository *TransactionRepository) CreateTransaction(transaction *model.Transaction) error {
+	if err := repository.db.Create(&transaction).Error; err != nil {
 		return fmt.Errorf("failed to create transaction: %w", err)
 	}
 
 	return nil
 }
 
-func GetTransactionByID(id int) (*model.Transaction, error) {
-	db, err := database.Connect()
-	if err != nil {
-		return &model.Transaction{}, fmt.Errorf("failed to connect to database: %w", err)
-	}
-
+func (repository *TransactionRepository) GetTransactionByID(id uint) (*model.Transaction, error) {
 	var transaction model.Transaction
-	if err := db.Where("id = ?", id).First(&transaction).Error; err != nil {
+	if err := repository.db.Where("id = ?", id).First(&transaction).Error; err != nil {
 		return nil, fmt.Errorf("failed to get transaction: %w", err)
 	}
 
 	return &transaction, nil
 }
 
-func GetTransactions() ([]model.Transaction, error) {
-	db, err := database.Connect()
-	if err != nil {
-		return []model.Transaction{}, fmt.Errorf("failed to connect to database: %w", err)
-	}
-
+func (repository *TransactionRepository) GetTransactions(limit, offset int) ([]model.Transaction, error) {
 	var transactions []model.Transaction
-	if err := db.Find(&transactions).Error; err != nil {
-		return nil, fmt.Errorf("failed to get transactions: %w", err)
+
+	if err := repository.db.Limit(limit).Offset(offset).Find(&transactions).Error; err != nil {
+		return nil, fmt.Errorf("failed to get items: %w", err)
 	}
 
 	return transactions, nil
 }
 
-func UpdateTransaction(transaction model.Transaction) error {
-	db, err := database.Connect()
-	if err != nil {
-		return fmt.Errorf("failed to connect to database: %w", err)
-	}
-
-	if err := db.Save(&transaction).Error; err != nil {
+func (repository *TransactionRepository) UpdateTransaction(transaction model.Transaction) error {
+	if err := repository.db.Save(&transaction).Error; err != nil {
 		return fmt.Errorf("failed to update transaction: %w", err)
 	}
 
 	return nil
 }
 
-func DeleteTransaction(id int) error {
-	db, err := database.Connect()
-	if err != nil {
-		return fmt.Errorf("failed to connect to database: %w", err)
-	}
-
-	if err := db.Where("id = ?", id).Delete(&model.Transaction{}).Error; err != nil {
+func (repository *TransactionRepository) DeleteTransaction(id int) error {
+	if err := repository.db.Where("id = ?", id).Delete(&model.Transaction{}).Error; err != nil {
 		return fmt.Errorf("failed to delete transaction: %w", err)
 	}
 

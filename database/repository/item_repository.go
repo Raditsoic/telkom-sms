@@ -49,9 +49,17 @@ func (repo *ItemRepository) UpdateItem(item model.Item) error {
 	return nil
 }
 
-func (repo *ItemRepository) DeleteItem(id int) error {
+func (repo *ItemRepository) DeleteItem(id string) error {
 	if err := repo.db.Where("id = ?", id).Delete(&model.Item{}).Error; err != nil {
 		return fmt.Errorf("failed to delete item: %w", err)
+	}
+
+	return nil
+}
+
+func (repo *ItemRepository) AddItem(item *model.Item) error {
+	if err := repo.db.Create(item).Error; err != nil {
+		return fmt.Errorf("failed to add item: %w", err)
 	}
 
 	return nil

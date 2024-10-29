@@ -30,7 +30,6 @@ func (service *ItemService) GetItems(pageParam, limitParam string) ([]model.Item
 }
 
 func (service *ItemService) CreateItem(item *model.Item) (*model.Item, error) {
-	// Use GORM to create the item in the database
 	if err := service.repository.CreateItem(item); err != nil {
 		return nil, err
 	}
@@ -40,4 +39,31 @@ func (service *ItemService) CreateItem(item *model.Item) (*model.Item, error) {
 
 func (service *ItemService) GetItemByID(id string) (*model.Item, error) {
 	return service.repository.GetItemByID(id)
+}
+
+func (service *ItemService) UpdateItem(item *model.Item) (*model.Item, error) {
+	_, err := service.GetItemByID(strconv.FormatUint(uint64(item.ID), 10))
+	if err != nil {
+		return item, err
+	}
+
+	if err = service.repository.UpdateItem(*item); err != nil {
+		return nil, err
+	}
+
+	return item, nil
+}
+
+func (service *ItemService) DeleteItem(id string) error {
+	_, err := service.GetItemByID(id)
+	if err != nil {
+		return err
+	}
+
+	err = service.repository.DeleteItem(id)
+	if err != nil {
+		return err
+	}
+
+	return service.repository.DeleteItem(id)
 }
