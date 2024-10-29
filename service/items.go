@@ -2,51 +2,48 @@ package service
 
 import (
 	"encoding/json"
-	"net/http"
+	"strconv"
 
 	"gtihub.com/raditsoic/telkom-storage-ms/database/repository"
 	"gtihub.com/raditsoic/telkom-storage-ms/model"
 )
 
-func GetItems(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	items, err := repository.GetItems()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(items); err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
+type ItemService struct {
+	repository repository.ItemRepository
 }
 
-func CreateItem(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
+func NewItemService(repo repository.ItemRepository) *ItemService {
+	return &ItemService{repository: repo}
+}
+
+func (service *ItemService) GetItems(pageParam, limitParam string) ([]model.Item, error) {
+	page, limit := 1, 10
+
+	if parsedPage, err := strconv.Atoi(pageParam); err == nil && parsedPage > 0 {
+		page = parsedPage
+	}
+	if parsedLimit, err := strconv.Atoi(limitParam); err == nil && parsedLimit > 0 {
+		limit = parsedLimit
 	}
 
+	offset := (page - 1) * limit
+	return service.repository.GetItems(limit, offset)
+}
+
+func (service *ItemService) CreateItem(newItem []byte) (*model.Item, error) {
 	var item model.Item
-	if err := json.NewDecoder(r.Body).Decode(&item); err != nil {
-		http.Error(w, "Invalid request body: "+err.Error(), http.StatusBadRequest)
-		return
+
+	if err := json.Unmarshal(newItem, &item); err != nil {
+		return nil, err
 	}
 
-	if err := repository.CreateItem(item); err != nil {
-		http.Error(w, "Failed to create item: "+err.Error(), http.StatusInternalServerError)
-		return
+	if err := service.repository.CreateItem(item); err != nil {
+		return nil, err
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	w.Header().Set("Content-Type", "application/json")
-	response := map[string]string{"message": "Item created successfully"}
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "Failed to encode response: "+err.Error(), http.StatusInternalServerError)
-	}
+	return &item, nil
+}
+
+func (service *ItemService) GetItemByID(id string) (*model.Item, error) {
+	return service.repository.GetItemByID(id)
 }

@@ -3,71 +3,55 @@ package repository
 import (
 	"fmt"
 
-	"gtihub.com/raditsoic/telkom-storage-ms/database"
+	"gorm.io/gorm"
 	"gtihub.com/raditsoic/telkom-storage-ms/model"
 )
 
-func CreateItem(item model.Item) error {
-	db, err := database.Connect()
-	if err != nil {
-		return fmt.Errorf("failed to connect to database: %v", err)
-	}
+type ItemRepository struct {
+	db *gorm.DB
+}
 
-	if err := db.Create(&item).Error; err != nil {
+func NewItemRepository(db *gorm.DB) *ItemRepository {
+	return &ItemRepository{db: db}
+}
+
+func (repo *ItemRepository) CreateItem(item model.Item) error {
+	if err := repo.db.Create(&item).Error; err != nil {
 		return fmt.Errorf("failed to create item: %v", err)
 	}
 
 	return nil
 }
 
-func GetItemByID(id int) (*model.Item, error) {
-	db, err := database.Connect()
-	if err != nil {
-		return &model.Item{}, fmt.Errorf("failed to connect to database: %v", err)
-	}
-
+func (repo *ItemRepository) GetItemByID(id string) (*model.Item, error) {
 	var item model.Item
-	if err := db.Where("id = ?", id).First(&item).Error; err != nil {
+	if err := repo.db.Where("id = ?", id).First(&item).Error; err != nil {
 		return nil, fmt.Errorf("failed to get item: %v", err)
 	}
 
 	return &item, nil
 }
 
-func GetItems() ([]model.Item, error) {
-	db, err := database.Connect()
-	if err != nil {
-		return []model.Item{}, fmt.Errorf("failed to connect to database: %v", err)
-	}
-
+func (repo *ItemRepository) GetItems(limit, offset int) ([]model.Item, error) {
 	var items []model.Item
-	if err := db.Find(&items).Error; err != nil {
+
+	if err := repo.db.Limit(limit).Offset(offset).Find(&items).Error; err != nil {
 		return nil, fmt.Errorf("failed to get items: %v", err)
 	}
 
 	return items, nil
 }
 
-func UpdateItem(item model.Item) error {
-	db, err := database.Connect()
-	if err != nil {
-		return fmt.Errorf("failed to connect to database: %v", err)
-	}
-
-	if err := db.Save(&item).Error; err != nil {
+func (repo *ItemRepository) UpdateItem(item model.Item) error {
+	if err := repo.db.Save(&item).Error; err != nil {
 		return fmt.Errorf("failed to update item: %v", err)
 	}
 
 	return nil
 }
 
-func DeleteItem(id int) error {
-	db, err := database.Connect()
-	if err != nil {
-		return fmt.Errorf("failed to connect to database: %v", err)
-	}
-
-	if err := db.Where("id = ?", id).Delete(&model.Item{}).Error; err != nil {
+func (repo *ItemRepository) DeleteItem(id int) error {
+	if err := repo.db.Where("id = ?", id).Delete(&model.Item{}).Error; err != nil {
 		return fmt.Errorf("failed to delete item: %v", err)
 	}
 
