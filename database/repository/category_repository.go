@@ -44,35 +44,35 @@ func (repo *CategoryRepository) GetCategoryByID(id string) (*model.CategoryByIDR
 	var category model.CategoryByIDResponse
 	if err := repo.db.Model(&model.Category{}).
 		First(&category, id).Error; err != nil {
-        return nil, fmt.Errorf("failed to fetch categories: %w", err)
-    }
+		return nil, fmt.Errorf("failed to fetch categories: %w", err)
+	}
 
 	return &category, nil
 }
 
 func (repo *CategoryRepository) GetCategories(limit, offset int) ([]model.AllCategoryResponse, error) {
-    var categories []model.AllCategoryResponse
+	var categories []model.AllCategoryResponse
 
-    if err := repo.db.Model(&model.Category{}).
-        Preload("Storage").
-        Limit(limit).
-        Offset(offset).
-        Find(&categories).Error; err != nil {
-        return nil, fmt.Errorf("failed to fetch categories: %w", err)
-    }
+	if err := repo.db.Model(&model.Category{}).
+		Preload("Storage").
+		Limit(limit).
+		Offset(offset).
+		Find(&categories).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch categories: %w", err)
+	}
 
-    return categories, nil
+	return categories, nil
 }
 
 func (repo *CategoryRepository) GetCategoryWithItems(categoryID uint) (*model.Category, error) {
-    var category model.Category
-    
-    if err := repo.db.Preload("Items").
-        First(&category, categoryID).Error; err != nil {
-        return nil, fmt.Errorf("failed to fetch category: %w", err)
-    }
+	var category model.Category
 
-    return &category, nil
+	if err := repo.db.Preload("Items").
+		First(&category, categoryID).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch category: %w", err)
+	}
+
+	return &category, nil
 }
 
 // func (repo *CategoryRepository) GetCategoriesWithStorage() ([]model.CategoryWithStorage, error) {
