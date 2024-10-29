@@ -48,17 +48,17 @@ func (s *CategoryService) GetCategoryByID(id string) (*model.CategoryByIDRespons
 }
 
 func (service *CategoryService) GetCategoryWithItems(categoryID uint) (*model.CategoryWithItemsResponse, error) {
-    category, err := service.repository.GetCategoryWithItems(categoryID)
-    if err != nil {
-        return nil, err
-    }
+	category, err := service.repository.GetCategoryWithItems(categoryID)
+	if err != nil {
+		return nil, err
+	}
 
-    response := &model.CategoryWithItemsResponse{
-        ID:        category.ID,
-        Name:      category.Name,
-        StorageID: category.StorageID,
-        Items:     category.Items,
-    }
+	response := &model.CategoryWithItemsResponse{
+		ID:        category.ID,
+		Name:      category.Name,
+		StorageID: category.StorageID,
+		Items:     category.Items,
+	}
 
-    return response, nil
+	return response, nil
 }
