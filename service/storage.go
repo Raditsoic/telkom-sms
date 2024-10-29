@@ -34,6 +34,15 @@ func (service *StorageService) CreateStorage(storageData []byte) (*model.Storage
 	return &storage, nil
 }
 
+func (service *StorageService) DeleteStorage(id int) error {
+	_, err := service.repository.GetStorageByID(id)
+	if err != nil {
+		return err
+	}
+
+	return service.repository.DeleteStorage(id)
+}
+
 // func (service *StorageService) GetStorageByID(w http.ResponseWriter, r *http.Request) {
 // 	vars := mux.Vars(r)
 // 	idStr := vars["id"]
