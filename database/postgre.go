@@ -30,7 +30,14 @@ func Connect() (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to connect database: %w", err)
 	}
 
-	if err := db.AutoMigrate(&model.Admin{}, &model.Storage{}, &model.Item{}, &model.Category{}, &model.Transaction{}); err != nil {
+	if err := db.AutoMigrate(
+		&model.Admin{},
+		&model.Storage{},
+		&model.Item{},
+		&model.Category{},
+		&model.LoanTransaction{},
+		&model.InquiryTransaction{},
+	); err != nil {
 		log.Fatalf("Could not migrate: %v", err)
 	}
 

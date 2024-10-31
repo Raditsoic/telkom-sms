@@ -23,37 +23,128 @@ func (repository *TransactionRepository) CreateTransaction(transaction *model.Tr
 	return nil
 }
 
-func (repository *TransactionRepository) GetTransactionByID(id uint) (*model.Transaction, error) {
-	var transaction model.Transaction
-	if err := repository.db.Where("id = ?", id).First(&transaction).Error; err != nil {
-		return nil, fmt.Errorf("failed to get transaction: %w", err)
+func (repository *TransactionRepository) GetLoanTransactionByID(id int) (*model.UnifiedTransaction, error) {
+	var transaction model.UnifiedTransaction
+
+	var loan model.LoanTransaction
+	if err := repository.db.Preload("Item").Where("id = ?", id).First(&loan).Error; err == nil {
+		transaction = model.UnifiedTransaction{
+			ID:                 loan.ID,
+			TransactionType:    "loan",
+			EmployeeName:       loan.EmployeeName,
+			EmployeeDepartment: loan.EmployeeDepartment,
+			EmployeePosition:   loan.EmployeePosition,
+			Quantity:           loan.Quantity,
+			Status:             loan.Status,
+			Time:               loan.Time,
+			ItemID:             loan.ItemID,
+			Item:               loan.Item,
+			LoanTime:           &loan.LoanTime,
+			ReturnTime:         &loan.ReturnTime,
+		}
+
+		return &transaction, nil
 	}
 
-	return &transaction, nil
+	return nil, gorm.ErrRecordNotFound
 }
 
-func (repository *TransactionRepository) GetTransactions(limit, offset int) ([]model.Transaction, error) {
-	var transactions []model.Transaction
+func (repository *TransactionRepository) GetInquiryTransactionByID(id int) (*model.UnifiedTransaction, error) {
+	var transaction model.UnifiedTransaction
 
-	if err := repository.db.Limit(limit).Offset(offset).Find(&transactions).Error; err != nil {
-		return nil, fmt.Errorf("failed to get items: %w", err)
+	var inquiry model.InquiryTransaction
+	if err := repository.db.Preload("Item").Where("id = ?", id).First(&inquiry).Error; err == nil {
+		transaction = model.UnifiedTransaction{
+			ID:                 inquiry.ID,
+			TransactionType:    "inquiry",
+			EmployeeName:       inquiry.EmployeeName,
+			EmployeeDepartment: inquiry.EmployeeDepartment,
+			EmployeePosition:   inquiry.EmployeePosition,
+			Quantity:           inquiry.Quantity,
+			Status:             inquiry.Status,
+			Time:               inquiry.Time,
+			ItemID:             inquiry.ItemID,
+			Item:               inquiry.Item,
+		}
+
+		return &transaction, nil
 	}
 
-	return transactions, nil
+	return &transaction, gorm.ErrRecordNotFound
 }
 
-func (repository *TransactionRepository) UpdateTransaction(transaction model.Transaction) error {
-	if err := repository.db.Save(&transaction).Error; err != nil {
-		return fmt.Errorf("failed to update transaction: %w", err)
+func (repository *TransactionRepository) CreateLoanTransaction(loan model.LoanTransaction) error {
+	if err := repository.db.Create(&loan).Error; err != nil {
+		return fmt.Errorf("failed to create loan transaction: %w", err)
 	}
 
 	return nil
 }
 
-func (repository *TransactionRepository) DeleteTransaction(id int) error {
-	if err := repository.db.Where("id = ?", id).Delete(&model.Transaction{}).Error; err != nil {
-		return fmt.Errorf("failed to delete transaction: %w", err)
+func (repository *TransactionRepository) CreateInquiryTransaction(inquiry model.InquiryTransaction) error {
+	if err := repository.db.Create(&inquiry).Error; err != nil {
+		return fmt.Errorf("failed to create loan transaction: %w", err)
 	}
 
 	return nil
 }
+
+func (repository *TransactionRepository) GetLoanTransactions(limit, offset int) ([]model.LoanTransaction, error) {
+	var loanTransactions []model.LoanTransaction
+	if err := repository.db.Preload("Item").Limit(limit).Offset(offset).Find(&loanTransactions).Error; err != nil {
+		return nil, fmt.Errorf("failed to get loan transactions: %w", err)
+	}
+
+	return loanTransactions, nil
+}
+
+func (repository *TransactionRepository) GetInquiryTransactions(limit, offset int) ([]model.InquiryTransaction, error) {
+	var inquiryTransactions []model.InquiryTransaction
+	if err := repository.db.Preload("Item").Limit(limit).Offset(offset).Find(&inquiryTransactions).Error; err != nil {
+		return nil, fmt.Errorf("failed to get inquiry transactions: %w", err)
+	}
+
+	return inquiryTransactions, nil
+}
+
+// func (repository *TransactionRepository) GetTransactionByID(id int) (*model.UnifiedTransaction, error) {
+// 	var transaction model.UnifiedTransaction
+
+// 	var loan model.LoanTransaction
+// 	if err := repository.db.Preload("Item").Where("id = ?", id).First(&loan).Error; err == nil {
+// 		transaction = model.UnifiedTransaction{
+// 			ID:                 loan.ID,
+// 			TransactionType:    "loan",
+// 			EmployeeName:       loan.EmployeeName,
+// 			EmployeeDepartment: loan.EmployeeDepartment,
+// 			EmployeePosition:   loan.EmployeePosition,
+// 			Quantity:           loan.Quantity,
+// 			Status:             loan.Status,
+// 			Time:               loan.Time,
+// 			ItemID:             loan.ItemID,
+// 			Item:               loan.Item,
+// 			LoanTime:           &loan.LoanTime,
+// 			ReturnTime:         &loan.ReturnTime,
+// 		}
+// 		return &transaction, nil
+// 	}
+
+// 	var inquiry model.InquiryTransaction
+// 	if err := repository.db.Preload("Item").Where("id = ?", id).First(&inquiry).Error; err == nil {
+// 		transaction = model.UnifiedTransaction{
+// 			ID:                 inquiry.ID,
+// 			TransactionType:    "inquiry",
+// 			EmployeeName:       inquiry.EmployeeName,
+// 			EmployeeDepartment: inquiry.EmployeeDepartment,
+// 			EmployeePosition:   inquiry.EmployeePosition,
+// 			Quantity:           inquiry.Quantity,
+// 			Status:             inquiry.Status,
+// 			Time:               inquiry.Time,
+// 			ItemID:             inquiry.ItemID,
+// 			Item:               inquiry.Item,
+// 		}
+// 		return &transaction, nil
+// 	}
+
+// 	return nil, gorm.ErrRecordNotFound
+// }
