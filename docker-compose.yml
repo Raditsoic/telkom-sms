@@ -28,6 +28,18 @@ services:
         networks:
             - main_network
 
+    seeder:
+        build:
+            context: .
+            dockerfile: Dockerfile.seeder
+        env_file: .env
+        depends_on:
+            - psql
+        networks:
+            - main_network
+        profiles:
+            - seeder
+
 volumes:
     db_postgres:
 
