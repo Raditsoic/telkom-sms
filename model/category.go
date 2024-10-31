@@ -25,6 +25,7 @@ type CategoryWithItemsResponse struct {
 	ID        uint   `json:"id"`
 	Name      string `json:"name"`
 	StorageID uint   `json:"storage_id"`
+	Storage   Storage `json:"storage"`
 	Items     []Item `json:"items"`
 }
 	

@@ -67,7 +67,7 @@ func (repo *CategoryRepository) GetCategories(limit, offset int) ([]model.AllCat
 func (repo *CategoryRepository) GetCategoryWithItems(categoryID uint) (*model.Category, error) {
 	var category model.Category
 
-	if err := repo.db.Preload("Items").
+	if err := repo.db.Preload("Items").Preload("Storage").
 		First(&category, categoryID).Error; err != nil {
 		return nil, fmt.Errorf("failed to fetch category: %w", err)
 	}

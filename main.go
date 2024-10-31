@@ -381,6 +381,25 @@ func main() {
 			return
 		}
 	}).Methods("POST")
+	// r.HandleFunc("/api/transaction/loan/{id}", func(w http.ResponseWriter, r *http.Request) {
+	// 	vars := mux.Vars(r)
+	// 	id, err := strconv.ParseUint(vars["id"], 10, 32)
+	// 	if err != nil {
+	// 		http.Error(w, "Invalid ID", http.StatusBadRequest)
+	// 		return
+	// 	}
+
+	// 	transaction, err := TransactionService.UpdateLoanTransaction(uint(id))
+	// 	if err != nil {
+	// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 		return
+	// 	}
+
+	// 	w.Header().Set("Content-Type", "application/json")
+	// 	if err := json.NewEncoder(w).Encode(transaction); err != nil {
+	// 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	// 	}
+	// }).Methods("UPDATE")
 
 	// CORS configuration
 	c := cors.New(cors.Options{
