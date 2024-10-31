@@ -57,6 +57,7 @@ func (service *CategoryService) GetCategoryWithItems(categoryID uint) (*model.Ca
 		ID:        category.ID,
 		Name:      category.Name,
 		StorageID: category.StorageID,
+		Storage:   category.Storage,
 		Items:     category.Items,
 	}
 

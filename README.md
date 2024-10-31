@@ -237,14 +237,12 @@ curl --location 'http://localhost:8080/api/transaction/loan' \
 
 #### **Seed Database**
 
-- Remove Container
-docker-compose down 
+> Preferred Delete Container
 
-- # Remove the database volume
-docker volume rm $(docker volume ls -q | grep db_postgres)
+- Remove Container: `docker-compose down` 
 
-- # Start services
-docker-compose up -d
+- Remove the database volume : `docker volume rm $(docker volume ls -q | grep db_postgres)`
 
-- # Run the seeder
-docker-compose --profile seeder up seeder
+- Start services: `docker-compose up -d`
+
+- Run the seeder: `docker-compose --profile seeder up seeder`
