@@ -2,8 +2,6 @@ package service
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
 	"gtihub.com/raditsoic/telkom-storage-ms/database/repository"
 	"gtihub.com/raditsoic/telkom-storage-ms/model"
@@ -16,67 +14,6 @@ type TransactionService struct {
 
 func NewTransactionService(log repository.TransactionRepository, item repository.ItemRepository) *TransactionService {
 	return &TransactionService{logRepository: log, itemRepository: item}
-}
-
-func (s *TransactionService) CreateTransaction(req interface{}, transactionType string) (interface{}, error) {
-	var item *model.Item
-	var err error
-
-	switch transactionType {
-	case "inquiry":
-		inquiryReq, ok := req.(*model.InquiryTransaction)
-		if !ok {
-			return nil, fmt.Errorf("invalid inquiry transaction request")
-		}
-		item, err = s.itemRepository.GetItemByID(fmt.Sprintf("%d", inquiryReq.ItemID))
-		if err != nil {
-			return nil, fmt.Errorf("item not found: %w", err)
-		}
-
-		newQuantity := item.Quantity - inquiryReq.Quantity
-		if newQuantity < 0 {
-			return &model.InquiryTransaction{}, fmt.Errorf("insufficient quantity")
-		}
-
-		item.Quantity = newQuantity
-		if err := s.itemRepository.UpdateItem(*item); err != nil {
-			return nil, fmt.Errorf("failed to update item quantity: %w", err)
-		}
-
-		if err := s.logRepository.CreateInquiryTransaction(*inquiryReq); err != nil {
-			item.Quantity += inquiryReq.Quantity
-			_ = s.itemRepository.UpdateItem(*item)
-			return nil, fmt.Errorf("failed to create transaction log: %w", err)
-		}
-		return inquiryReq, nil
-
-	case "loan":
-		loanReq, ok := req.(*model.LoanTransaction)
-		if !ok {
-			return nil, fmt.Errorf("invalid loan transaction request")
-		}
-		item, err = s.itemRepository.GetItemByID(fmt.Sprintf("%d", loanReq.ItemID))
-		if err != nil {
-			return nil, fmt.Errorf("item not found: %w", err)
-		}
-		newQuantity := item.Quantity - loanReq.Quantity
-		if newQuantity < 0 {
-			return &model.LoanTransaction{}, fmt.Errorf("insufficient quantity")
-		}
-		item.Quantity = newQuantity
-		if err := s.itemRepository.UpdateItem(*item); err != nil {
-			return nil, fmt.Errorf("failed to update item quantity: %w", err)
-		}
-		if err := s.logRepository.CreateLoanTransaction(*loanReq); err != nil {
-			item.Quantity += loanReq.Quantity
-			_ = s.itemRepository.UpdateItem(*item)
-			return nil, fmt.Errorf("failed to create loan transaction log: %w", err)
-		}
-		return loanReq, nil
-
-	default:
-		return nil, fmt.Errorf("unsupported transaction type")
-	}
 }
 
 func (s *TransactionService) GetTransactions(page, limit int) ([]model.UnifiedTransaction, error) {
@@ -140,33 +77,68 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.UnifiedTr
 	return transactions, nil
 }
 
-func (s *TransactionService) GetTransactionByID(globalID string) (*model.UnifiedTransaction, error) {
-	parts := strings.Split(globalID, "_")
-	if len(parts) != 2 {
-		return nil, fmt.Errorf("invalid global ID format")
-	}
-
-	transactionType := parts[0]
-	id, err := strconv.ParseUint(parts[1], 10, 32)
+func (s *TransactionService) GetLoanTransactionByID(id uint) (*model.UnifiedTransaction, error) {
+	loan, err := s.logRepository.GetLoanTransactionByID(id)
 	if err != nil {
-		return nil, fmt.Errorf("invalid ID in global ID")
+		return nil, err
 	}
 
-	switch transactionType {
-	case "loan":
-		loan, err := s.logRepository.GetLoanTransactionByID(int(id))
-		if err != nil {
-			return nil, err
-		}
-		return loan, nil
+	return loan, nil
+}
 
-	case "inquiry":
-		inquiry, err := s.logRepository.GetInquiryTransactionByID(int(id))
-		if err != nil {
-			return nil, err
-		}
-		return inquiry, nil
-	default:
-		return nil, fmt.Errorf("unknown transaction type")
+func (s *TransactionService) GetInquiryTransactionByID(id uint) (*model.UnifiedTransaction, error) {
+	inquiry, err := s.logRepository.GetInquiryTransactionByID(id)
+	if err != nil {
+		return nil, err
 	}
+
+	return inquiry, nil
+}
+
+func (s *TransactionService) CreateLoanTransaction(loan model.LoanTransaction) (*model.LoanTransaction, error) {
+	item, err := s.itemRepository.GetItemByID(fmt.Sprintf("%d", loan.ItemID))
+	if err != nil {
+		return nil, fmt.Errorf("item not found: %w", err)
+	}
+
+	newQuantity := item.Quantity - loan.Quantity
+	if newQuantity < 0 {
+		return &model.LoanTransaction{}, fmt.Errorf("insufficient quantity")
+	}
+
+	item.Quantity = newQuantity
+	if err := s.itemRepository.UpdateItem(*item); err != nil {
+		return nil, fmt.Errorf("failed to update item quantity: %w", err)
+	}
+
+	if err := s.logRepository.CreateLoanTransaction(loan); err != nil {
+		item.Quantity += loan.Quantity
+		_ = s.itemRepository.UpdateItem(*item)
+		return nil, fmt.Errorf("failed to create loan transaction log: %w", err)
+	}
+	return &loan, nil
+}
+
+func (s *TransactionService) CreateInquiryTransaction(inquiry model.InquiryTransaction) (*model.InquiryTransaction, error) {
+	item, err := s.itemRepository.GetItemByID(fmt.Sprintf("%d", inquiry.ItemID))
+	if err != nil {
+		return nil, fmt.Errorf("item not found: %w", err)
+	}
+
+	newQuantity := item.Quantity - inquiry.Quantity
+	if newQuantity < 0 {
+		return &model.InquiryTransaction{}, fmt.Errorf("insufficient quantity")
+	}
+
+	item.Quantity = newQuantity
+	if err := s.itemRepository.UpdateItem(*item); err != nil {
+		return nil, fmt.Errorf("failed to update item quantity: %w", err)
+	}
+
+	if err := s.logRepository.CreateInquiryTransaction(inquiry); err != nil {
+		item.Quantity += inquiry.Quantity
+		_ = s.itemRepository.UpdateItem(*item)
+		return nil, fmt.Errorf("failed to create inquiry transaction log: %w", err)
+	}
+	return &inquiry, nil
 }
