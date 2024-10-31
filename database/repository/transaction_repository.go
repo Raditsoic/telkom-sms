@@ -77,7 +77,7 @@ func (repository *TransactionRepository) GetInquiryTransactionByID(id uint) (*mo
 func (repository *TransactionRepository) CreateLoanTransaction(loan model.LoanTransaction) error {
 	loan.LoanTime = time.Now()
 	loan.Time = time.Now()
-	loan.Status = "Ongoing"
+	loan.Status = "Pending"
 
 	if err := repository.db.Create(&loan).Error; err != nil {
 		return fmt.Errorf("failed to create loan transaction: %w", err)

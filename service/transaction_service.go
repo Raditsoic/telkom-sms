@@ -27,7 +27,7 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.UnifiedTr
 	for _, loan := range loanTransactions {
 		transaction := model.UnifiedTransaction{
 			ID:                 loan.ID,
-			TransactionType:    "loan",
+			TransactionType:    "Peminjaman",
 			GlobalID:           fmt.Sprintf("loan_%d", loan.ID),
 			EmployeeName:       loan.EmployeeName,
 			EmployeeDepartment: loan.EmployeeDepartment,
@@ -56,7 +56,7 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.UnifiedTr
 		transaction := model.UnifiedTransaction{
 			ID:                 inquiry.ID,
 			GlobalID:           fmt.Sprintf("inquiry_%d", inquiry.ID),
-			TransactionType:    "inquiry",
+			TransactionType:    "Permintaan",
 			EmployeeName:       inquiry.EmployeeName,
 			EmployeeDepartment: inquiry.EmployeeDepartment,
 			EmployeePosition:   inquiry.EmployeePosition,
