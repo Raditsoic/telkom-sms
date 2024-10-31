@@ -232,12 +232,11 @@ curl --location 'http://localhost:8080/api/transaction/loan' \
 ### Prerequisite
 - Docker Windows/Linux
 
-### Run With Docker
-`docker compose up --build`
-
 #### **Seed Database**
 
-> Preferred Delete Container
+> Delete Container dulu di Dockernya
+
+- Build Seeder: `docker compose build seeder`
 
 - Remove Container: `docker-compose down` 
 
@@ -246,3 +245,6 @@ curl --location 'http://localhost:8080/api/transaction/loan' \
 - Start services: `docker-compose up -d`
 
 - Run the seeder: `docker-compose --profile seeder up seeder`
+
+### Run With Docker
+`docker compose up --build`

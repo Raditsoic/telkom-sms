@@ -3,9 +3,6 @@
 echo "Stopping all containers..."
 docker-compose down
 
-echo "Removing database volume..."
-docker volume rm $(docker volume ls -q | grep db_postgres)
-
 echo "Starting services..."
 docker-compose up -d
 
