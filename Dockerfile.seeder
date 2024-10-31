@@ -1,0 +1,12 @@
+FROM golang:1.23.1-alpine AS build
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY ./seeder ./seeder
+COPY wait-for-it.sh .
+RUN chmod +x wait-for-it.sh
+
+CMD ["./wait-for-it.sh", "psql:5432", "--", "go", "run", "./seeder/main.go"]
