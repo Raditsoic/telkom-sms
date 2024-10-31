@@ -30,6 +30,7 @@ type Item struct {
 	ID         uint     `gorm:"primaryKey" json:"id"`
 	Name       string   `json:"name"`
 	Quantity   int      `json:"quantity"`
+	Shelf      string   `json:"shelf"`
 	CategoryID uint     `json:"category_id"`
 	Category   Category `json:"-" gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
@@ -121,12 +122,12 @@ func main() {
 
 	// Create Items
 	items := []Item{
-		{Name: "Laptop", Quantity: 50, CategoryID: 1},
-		{Name: "Monitor", Quantity: 30, CategoryID: 1},
-		{Name: "Pen", Quantity: 1000, CategoryID: 2},
-		{Name: "Paper", Quantity: 500, CategoryID: 2},
-		{Name: "Chair", Quantity: 100, CategoryID: 3},
-		{Name: "Desk", Quantity: 50, CategoryID: 3},
+		{Name: "Laptop", Quantity: 50, Shelf: "1",  CategoryID: 1},
+		{Name: "Monitor", Quantity: 30, Shelf: "1", CategoryID: 1},
+		{Name: "Pen", Quantity: 1000, Shelf: "2", CategoryID: 2},
+		{Name: "Paper", Quantity: 500, Shelf: "2", CategoryID: 2},
+		{Name: "Chair", Quantity: 100, Shelf: "3", CategoryID: 3},
+		{Name: "Desk", Quantity: 50, Shelf: "3", CategoryID: 3},
 	}
 
 	for _, item := range items {
