@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -281,24 +280,28 @@ func main() {
 
 	// Transaction routes
 	r.HandleFunc("/api/transaction", func(w http.ResponseWriter, r *http.Request) {
-		var req model.TransactionRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		var transactionType string
+		var req interface{}
+
+		transactionType = r.URL.Query().Get("type")
+		switch transactionType {
+		case "loan":
+			req = &model.LoanTransaction{}
+		case "inquiry":
+			req = &model.InquiryTransaction{}
+		default:
+			http.Error(w, "Invalid or missing transaction type", http.StatusBadRequest)
+			return
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 			http.Error(w, "Invalid request body", http.StatusBadRequest)
 			return
 		}
 
-		transaction, err := TransactionService.CreateTransaction(&req)
+		transaction, err := TransactionService.CreateTransaction(req, transactionType)
 		if err != nil {
-			switch {
-			case strings.Contains(err.Error(), "item not found"):
-				http.Error(w, err.Error(), http.StatusNotFound)
-			case strings.Contains(err.Error(), "insufficient quantity"):
-				http.Error(w, err.Error(), http.StatusBadRequest)
-			case strings.Contains(err.Error(), "invalid transaction type"):
-				http.Error(w, err.Error(), http.StatusBadRequest)
-			default:
-				http.Error(w, "Internal server error", http.StatusInternalServerError)
-			}
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -310,8 +313,14 @@ func main() {
 		}
 	}).Methods("POST")
 	r.HandleFunc("/api/transactions", func(w http.ResponseWriter, r *http.Request) {
-		page := r.URL.Query().Get("page")
-		limit := r.URL.Query().Get("limit")
+		page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+		if page < 1 {
+			page = 1
+		}
+		limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+		if limit < 1 {
+			limit = 10
+		}
 
 		transactions, err := TransactionService.GetTransactions(page, limit)
 		if err != nil {
@@ -327,15 +336,9 @@ func main() {
 	}).Methods("GET")
 	r.HandleFunc("/api/transaction/{id}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		idStr := vars["id"]
+		id := vars["id"]
 
-		transactionID, err := strconv.ParseUint(idStr, 10, 32)
-		if err != nil {
-			http.Error(w, "Invalid transaction ID", http.StatusBadRequest)
-			return
-		}
-
-		transaction, err := TransactionService.GetTransactionByID(uint(transactionID))
+		transaction, err := TransactionService.GetTransactionByID(id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
