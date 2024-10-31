@@ -279,39 +279,6 @@ func main() {
 	// r.HandleFunc("/api/storage/{id}", service.GetStorageByID).Methods("GET")
 
 	// Transaction routes
-	r.HandleFunc("/api/transaction", func(w http.ResponseWriter, r *http.Request) {
-		var transactionType string
-		var req interface{}
-
-		transactionType = r.URL.Query().Get("type")
-		switch transactionType {
-		case "loan":
-			req = &model.LoanTransaction{}
-		case "inquiry":
-			req = &model.InquiryTransaction{}
-		default:
-			http.Error(w, "Invalid or missing transaction type", http.StatusBadRequest)
-			return
-		}
-
-		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
-			http.Error(w, "Invalid request body", http.StatusBadRequest)
-			return
-		}
-
-		transaction, err := TransactionService.CreateTransaction(req, transactionType)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated)
-		if err := json.NewEncoder(w).Encode(transaction); err != nil {
-			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-			return
-		}
-	}).Methods("POST")
 	r.HandleFunc("/api/transactions", func(w http.ResponseWriter, r *http.Request) {
 		page, _ := strconv.Atoi(r.URL.Query().Get("page"))
 		if page < 1 {
@@ -334,11 +301,15 @@ func main() {
 			return
 		}
 	}).Methods("GET")
-	r.HandleFunc("/api/transaction/{id}", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/api/transaction/loan/{id}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		id := vars["id"]
+		id, err := strconv.ParseUint(vars["id"], 10, 32)
+        if err != nil {
+            http.Error(w, "Invalid ID", http.StatusBadRequest)
+            return
+        }
 
-		transaction, err := TransactionService.GetTransactionByID(id)
+		transaction, err := TransactionService.GetLoanTransactionByID(uint(id))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -349,10 +320,67 @@ func main() {
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		}
 	}).Methods("GET")
-	// r.HandleFunc("/api/transaction/{id}", func(w http.ResponseWriter, r *http.Request) {
-	// 	vars := mux.Vars(r)
-	// 	id := vars["id"]
-	// }).Methods("PUT")
+	r.HandleFunc("/api/transaction/inquiry/{id}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id, err := strconv.ParseUint(vars["id"], 10, 32)
+        if err != nil {
+            http.Error(w, "Invalid ID", http.StatusBadRequest)
+            return
+        }
+
+		transaction, err := TransactionService.GetInquiryTransactionByID(uint(id))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(transaction); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		}
+	}).Methods("GET")
+	r.HandleFunc("/api/transaction/loan", func(w http.ResponseWriter, r *http.Request) {
+		var req model.LoanTransaction
+
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		transaction, err := TransactionService.CreateLoanTransaction(req)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		if err := json.NewEncoder(w).Encode(transaction); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			return
+		}
+	}).Methods("POST")
+	r.HandleFunc("/api/transaction/inquiry", func(w http.ResponseWriter, r *http.Request) {
+		var inquiry model.InquiryTransaction
+
+		if err := json.NewDecoder(r.Body).Decode(&inquiry); err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		transaction, err := TransactionService.CreateInquiryTransaction(inquiry)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		if err := json.NewEncoder(w).Encode(transaction); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			return
+		}
+	}).Methods("POST")
 
 	// CORS configuration
 	c := cors.New(cors.Options{

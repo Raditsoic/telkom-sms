@@ -23,7 +23,7 @@ func (repository *TransactionRepository) CreateTransaction(transaction *model.Tr
 	return nil
 }
 
-func (repository *TransactionRepository) GetLoanTransactionByID(id int) (*model.UnifiedTransaction, error) {
+func (repository *TransactionRepository) GetLoanTransactionByID(id uint) (*model.UnifiedTransaction, error) {
 	var transaction model.UnifiedTransaction
 
 	var loan model.LoanTransaction
@@ -49,7 +49,7 @@ func (repository *TransactionRepository) GetLoanTransactionByID(id int) (*model.
 	return nil, gorm.ErrRecordNotFound
 }
 
-func (repository *TransactionRepository) GetInquiryTransactionByID(id int) (*model.UnifiedTransaction, error) {
+func (repository *TransactionRepository) GetInquiryTransactionByID(id uint) (*model.UnifiedTransaction, error) {
 	var transaction model.UnifiedTransaction
 
 	var inquiry model.InquiryTransaction
