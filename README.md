@@ -140,6 +140,93 @@ curl --location 'http://localhost:8080/api/storage' \
     }'
 ```
 
+### Transaction
+
+#### Get All Transactions
+- endpoint: /api/transactions
+- cURL:
+```curl
+curl --location 'http://localhost:8080/api/transactions'
+```
+
+
+
+#### Get Loan Transaction By ID
+- endpoint: /api/transaction/loan/{id}
+- cURL
+```curl
+curl --location 'http://localhost:8080/api/transaction/loan/1'
+```
+
+#### Get Inquiry Transaction By ID
+- endpoint: /api/transaction/inquiry/{id}
+- cURL
+```curl
+http://localhost:8080/api/transaction/inquiry/1
+```
+
+### Create Inquiry Transaction
+- endpoint: /api/transaction/inquiry
+- JSON Post:
+```json
+{
+    "employee_name": "Jane Smith",
+    "employee_department": "Engineering",
+    "employee_position": "Software Developer",
+    "quantity": 3,
+    "status": "inquired",
+    "time": "2024-10-30T14:00:00Z",
+    "item_id": 3
+}
+```
+- cURL:
+```curl
+curl --location 'http://localhost:8080/api/transaction/inquiry' \
+--header 'Content-Type: application/json' \
+--data '{
+    "employee_name": "Jane Smith",
+    "employee_department": "Engineering",
+    "employee_position": "Software Developer",
+    "quantity": 3,
+    "status": "inquired",
+    "time": "2024-10-30T14:00:00Z",
+    "item_id": 3
+}'
+```
+
+#### Create Loan Transaction
+- endpoint: /api/transaction/loan
+- JSON Post:
+```json
+{
+    "employee_name": "John Doe",
+    "employee_department": "Sales",
+    "employee_position": "Manager",
+    "quantity": 1,
+    "status": "loaned",
+    "time": "2024-10-30T14:00:00Z",
+    "item_id": 3,
+    "loan_time": "2024-10-30T14:30:00Z",
+    "return_time": "2024-11-15T14:30:00Z"
+}
+```
+- cURL:
+```curl
+curl --location 'http://localhost:8080/api/transaction/loan' \
+--header 'Content-Type: application/json' \
+--data '{
+    "employee_name": "John Doe",
+    "employee_department": "Sales",
+    "employee_position": "Manager",
+    "quantity": 1,
+    "status": "loaned",
+    "time": "2024-10-30T14:00:00Z",
+    "item_id": 3,
+    "loan_time": "2024-10-30T14:30:00Z",
+    "return_time": "2024-11-15T14:30:00Z"
+}'
+```
+
 ## **Docker**
 
 ### Prerequisite
@@ -147,3 +234,17 @@ curl --location 'http://localhost:8080/api/storage' \
 
 ### Run With Docker
 `docker compose up --build`
+
+#### **Seed Database**
+
+- Remove Container
+docker-compose down 
+
+- # Remove the database volume
+docker volume rm $(docker volume ls -q | grep db_postgres)
+
+- # Start services
+docker-compose up -d
+
+- # Run the seeder
+docker-compose --profile seeder up seeder
