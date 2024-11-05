@@ -33,7 +33,6 @@ type InquiryTransaction struct {
 type Transaction struct {
 	ID                 uint       `json:"id"`
 	TransactionType    string     `json:"transaction_type"`
-	GlobalID           string     `json:"global_id"`
 	EmployeeName       string     `json:"employee_name"`
 	EmployeeDepartment string     `json:"employee_department"`
 	EmployeePosition   string     `json:"employee_position"`
@@ -66,7 +65,6 @@ type AllTransactionsRequest struct {
 type InsertionTransaction struct {
 	ID                 uint      `json:"id"`
 	TransactionType    string    `json:"transaction_type"`
-	GlobalID           string    `json:"global_id"`
 	EmployeeName       string    `json:"employee_name"`
 	EmployeeDepartment string    `json:"employee_department"`
 	EmployeePosition   string    `json:"employee_position"`

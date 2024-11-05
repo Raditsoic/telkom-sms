@@ -2,7 +2,6 @@ package repository
 
 import (
 	"fmt"
-	"time"
 
 	"gorm.io/gorm"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
@@ -67,10 +66,6 @@ func (repository *TransactionRepository) GetInquiryTransactionByID(id uint) (*mo
 }
 
 func (repository *TransactionRepository) CreateLoanTransaction(loan model.LoanTransaction) error {
-	loan.LoanTime = time.Now()
-	loan.Time = time.Now()
-	loan.Status = "Pending"
-
 	if err := repository.db.Create(&loan).Error; err != nil {
 		return fmt.Errorf("failed to create loan transaction: %w", err)
 	}
@@ -79,9 +74,6 @@ func (repository *TransactionRepository) CreateLoanTransaction(loan model.LoanTr
 }
 
 func (repository *TransactionRepository) CreateInquiryTransaction(inquiry model.InquiryTransaction) error {
-	inquiry.Time = time.Now()
-	inquiry.Status = "Pending"
-
 	if err := repository.db.Create(&inquiry).Error; err != nil {
 		return fmt.Errorf("failed to create loan transaction: %w", err)
 	}
@@ -90,9 +82,6 @@ func (repository *TransactionRepository) CreateInquiryTransaction(inquiry model.
 }
 
 func (repository *TransactionRepository) CreateInsertionTransaction(insert *model.InsertionTransaction) error {
-	insert.Time = time.Now()
-	insert.Status = "Pending"
-
 	if err := repository.db.Create(insert).Error; err != nil {
 		return fmt.Errorf("failed to create insert transaction: %w", err)
 	}
@@ -126,8 +115,6 @@ func (repository *TransactionRepository) GetInsertionTransactions(limit, offset 
 
 	return insertTransactions, nil
 }
-
-
 
 // func (repository *TransactionRepository) GetTransactionByID(id int) (*model.Transaction, error) {
 // 	var transaction model.Transaction

@@ -28,7 +28,6 @@ func (s *TransactionService) CreateInsertionTransaction(insertion *model.Inserti
 	insertion.TransactionType = "Insertion"
 	insertion.Time = time.Now()
 	insertion.Status = "Pending"
-	insertion.GlobalID = fmt.Sprintf("insertion_%d", insertion.ID)
 
 	// Create the insertion transaction
 	if err := s.logRepository.CreateInsertionTransaction(insertion); err != nil {
@@ -49,8 +48,7 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.Transacti
 	for _, loan := range loanTransactions {
 		transaction := model.Transaction{
 			ID:                 loan.ID,
-			TransactionType:    "Peminjaman",
-			GlobalID:           fmt.Sprintf("loan_%d", loan.ID),
+			TransactionType:    "Loan",
 			EmployeeName:       loan.EmployeeName,
 			EmployeeDepartment: loan.EmployeeDepartment,
 			EmployeePosition:   loan.EmployeePosition,
@@ -78,8 +76,7 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.Transacti
 	for _, inquiry := range inquiryTransactions {
 		transaction := model.Transaction{
 			ID:                 inquiry.ID,
-			GlobalID:           fmt.Sprintf("inquiry_%d", inquiry.ID),
-			TransactionType:    "Permintaan",
+			TransactionType:    "Inquiry",
 			EmployeeName:       inquiry.EmployeeName,
 			EmployeeDepartment: inquiry.EmployeeDepartment,
 			EmployeePosition:   inquiry.EmployeePosition,
@@ -105,7 +102,6 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.Transacti
 	for _, insertion := range insertionTransactions {
 		transaction := model.Transaction{
 			ID:                 insertion.ID,
-			GlobalID:           fmt.Sprintf("insertion_%d", insertion.ID),
 			TransactionType:    "Insertion",
 			EmployeeName:       insertion.EmployeeName,
 			EmployeeDepartment: insertion.EmployeeDepartment,
@@ -157,6 +153,10 @@ func (s *TransactionService) CreateLoanTransaction(loan model.LoanTransaction) (
 		return nil, fmt.Errorf("failed to update item quantity: %w", err)
 	}
 
+	loan.LoanTime = time.Now()
+	loan.Time = time.Now()
+	loan.Status = "Pending"
+
 	if err := s.logRepository.CreateLoanTransaction(loan); err != nil {
 		item.Quantity += loan.Quantity
 		_ = s.itemRepository.UpdateItem(*item)
@@ -180,6 +180,9 @@ func (s *TransactionService) CreateInquiryTransaction(inquiry model.InquiryTrans
 	if err := s.itemRepository.UpdateItem(*item); err != nil {
 		return nil, fmt.Errorf("failed to update item quantity: %w", err)
 	}
+
+	inquiry.Time = time.Now()
+	inquiry.Status = "Pending"
 
 	if err := s.logRepository.CreateInquiryTransaction(inquiry); err != nil {
 		item.Quantity += inquiry.Quantity
