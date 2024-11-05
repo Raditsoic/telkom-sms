@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"time"
 
 	"gtihub.com/raditsoic/telkom-storage-ms/src/database/repository"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
@@ -23,8 +24,11 @@ func (s *TransactionService) CreateInsertionTransaction(insertion *model.Inserti
 		return nil, fmt.Errorf("failed to create item: %w", err)
 	}
 
-	// Set the item ID in the insertion transaction
 	insertion.ItemID = item.ID
+	insertion.TransactionType = "Insertion"
+	insertion.Time = time.Now()
+	insertion.Status = "Pending"
+	insertion.GlobalID = fmt.Sprintf("insertion_%d", insertion.ID)
 
 	// Create the insertion transaction
 	if err := s.logRepository.CreateInsertionTransaction(insertion); err != nil {
