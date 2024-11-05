@@ -55,6 +55,7 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.Transacti
 			Time:               loan.Time,
 			ItemID:             loan.ItemID,
 			Item:               loan.Item,
+			Notes:              loan.Notes,
 			LoanTime:           &loan.LoanTime,
 			ReturnTime:         &loan.ReturnTime,
 		}
@@ -81,12 +82,35 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.Transacti
 			Quantity:           inquiry.Quantity,
 			Status:             inquiry.Status,
 			Time:               inquiry.Time,
+			Notes:              inquiry.Notes,
 			ItemID:             inquiry.ItemID,
 			Item:               inquiry.Item,
 		}
 
 		if inquiry.Item != nil {
 			transaction.Item = inquiry.Item
+		}
+
+		transactions = append(transactions, transaction)
+	}
+
+	insertionTransactions, err := s.logRepository.GetInsertionTransactions(limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	for _, insertion := range insertionTransactions {
+		transaction := model.Transaction{
+			ID:                 insertion.ID,
+			GlobalID:           fmt.Sprintf("insertion_%d", insertion.ID),
+			TransactionType:    "Insertion",
+			EmployeeName:       insertion.EmployeeName,
+			EmployeeDepartment: insertion.EmployeeDepartment,
+			EmployeePosition:   insertion.EmployeePosition,
+			Status:             insertion.Status,
+			Time:               insertion.Time,
+			Notes:              insertion.Notes,
+			ItemID:             insertion.ItemID,
+			Item:               &insertion.Item,
 		}
 
 		transactions = append(transactions, transaction)

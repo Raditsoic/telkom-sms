@@ -89,6 +89,17 @@ func (repository *TransactionRepository) CreateInquiryTransaction(inquiry model.
 	return nil
 }
 
+func (repository *TransactionRepository) CreateInsertionTransaction(insert *model.InsertionTransaction) error {
+	insert.Time = time.Now()
+	insert.Status = "Pending"
+
+	if err := repository.db.Create(insert).Error; err != nil {
+		return fmt.Errorf("failed to create insert transaction: %w", err)
+	}
+
+	return nil
+}
+
 func (repository *TransactionRepository) GetLoanTransactions(limit, offset int) ([]model.LoanTransaction, error) {
 	var loanTransactions []model.LoanTransaction
 	if err := repository.db.Preload("Item").Limit(limit).Offset(offset).Find(&loanTransactions).Error; err != nil {
@@ -107,16 +118,16 @@ func (repository *TransactionRepository) GetInquiryTransactions(limit, offset in
 	return inquiryTransactions, nil
 }
 
-func (repository *TransactionRepository) CreateInsertionTransaction(insert *model.InsertionTransaction) error {
-	insert.Time = time.Now()
-	insert.Status = "Pending"
-
-	if err := repository.db.Create(insert).Error; err != nil {
-		return fmt.Errorf("failed to create insert transaction: %w", err)
+func (repository *TransactionRepository) GetInsertionTransactions(limit, offset int) ([]model.InsertionTransaction, error) {
+	var insertTransactions []model.InsertionTransaction
+	if err := repository.db.Preload("Item").Limit(limit).Offset(offset).Find(&insertTransactions).Error; err != nil {
+		return nil, fmt.Errorf("failed to get insert transactions: %w", err)
 	}
 
-	return nil
+	return insertTransactions, nil
 }
+
+
 
 // func (repository *TransactionRepository) GetTransactionByID(id int) (*model.Transaction, error) {
 // 	var transaction model.Transaction
