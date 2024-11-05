@@ -37,6 +37,8 @@ func Connect() (*gorm.DB, error) {
 		&model.Category{},
 		&model.LoanTransaction{},
 		&model.InquiryTransaction{},
+		&model.Transaction{},
+		&model.InsertionTransaction{},
 	); err != nil {
 		log.Fatalf("Could not migrate: %v", err)
 	}

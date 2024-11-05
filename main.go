@@ -66,26 +66,6 @@ func main() {
 			return
 		}
 	}).Methods("GET")
-	// r.HandleFunc("/api/item", func(w http.ResponseWriter, r *http.Request) {
-	// 	var item model.Item
-	// 	if err := json.NewDecoder(r.Body).Decode(&item); err != nil {
-	// 		http.Error(w, "Invalid request body", http.StatusBadRequest)
-	// 		return
-	// 	}
-	// 	defer r.Body.Close()
-
-	// 	createdItem, err := itemService.CreateItem(&item)
-	// 	if err != nil {
-	// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 		return
-	// 	}
-
-	// 	w.WriteHeader(http.StatusCreated)
-	// 	if err := json.NewEncoder(w).Encode(createdItem); err != nil {
-	// 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-	// 		return
-	// 	}
-	// }).Methods("POST")
 	r.HandleFunc("/api/item/{id}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -401,6 +381,49 @@ func main() {
 			return
 		}
 	}).Methods("POST")
+	r.HandleFunc("/api/transaction/insert", func(w http.ResponseWriter, r *http.Request) {
+		var insert model.InsertionTransaction
+
+		if err := json.NewDecoder(r.Body).Decode(&insert); err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		transaction, err := TransactionService.CreateInsertionTransaction(&insert)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		if err := json.NewEncoder(w).Encode(transaction); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			return
+		}
+	}).Methods("POST")
+	// r.HandleFunc("/api/transaction", func(w http.ResponseWriter, r *http.Request) {
+	// 	var transaction model.Transaction
+	// 	if err := json.NewDecoder(r.Body).Decode(&transaction); err != nil {
+	// 		http.Error(w, "Invalid request body", http.StatusBadRequest)
+	// 		return
+	// 	}
+	// 	defer r.Body.Close()
+
+	// 	createdTransaction, err := TransactionService.CreateTransaction(&transaction)
+	// 	if err != nil {
+	// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 		return
+	// 	}
+
+	// 	w.WriteHeader(http.StatusCreated)
+	// 	if err := json.NewEncoder(w).Encode(createdTransaction); err != nil {
+	// 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	// 		return
+	// 	}
+	// }).Methods("POST")
+
+
 	// r.HandleFunc("/api/transaction/loan/{id}", func(w http.ResponseWriter, r *http.Request) {
 	// 	vars := mux.Vars(r)
 	// 	id, err := strconv.ParseUint(vars["id"], 10, 32)

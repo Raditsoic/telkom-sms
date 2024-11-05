@@ -70,10 +70,24 @@ type InsertionTransaction struct {
 	EmployeeName       string    `json:"employee_name"`
 	EmployeeDepartment string    `json:"employee_department"`
 	EmployeePosition   string    `json:"employee_position"`
-	Quantity           int       `json:"quantity"`
 	Status             string    `json:"status"`
 	Notes              string    `json:"notes"`
 	Time               time.Time `json:"time"`
 	ItemID             uint      `json:"item_id"`
-	Item               *Item     `json:"item" gorm:"foreignKey:ItemID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Item               Item      `json:"item" gorm:"foreignKey:ItemID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
+
+type UpdateTransactionRequest struct {
+	TransactionID string `json:"global_id"`
+	Status        string `json:"status"`
+}
+
+// type AdditionTransaction struct {
+// 	ID                 uint      `json:"id"`
+// 	TransactionType    string    `json:"transaction_type"`
+// 	GlobalID           string    `json:"global_id"`
+// 	EmployeeName       string    `json:"employee_name"`
+// 	EmployeeDepartment string    `json:"employee_department"`
+// 	EmployeePosition   string    `json:"employee_position"`
+// 	Quantity           int       `json:"quantity"`
+// }

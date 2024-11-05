@@ -107,6 +107,17 @@ func (repository *TransactionRepository) GetInquiryTransactions(limit, offset in
 	return inquiryTransactions, nil
 }
 
+func (repository *TransactionRepository) CreateInsertionTransaction(insert *model.InsertionTransaction) error {
+	insert.Time = time.Now()
+	insert.Status = "Pending"
+
+	if err := repository.db.Create(insert).Error; err != nil {
+		return fmt.Errorf("failed to create insert transaction: %w", err)
+	}
+
+	return nil
+}
+
 // func (repository *TransactionRepository) GetTransactionByID(id int) (*model.Transaction, error) {
 // 	var transaction model.Transaction
 

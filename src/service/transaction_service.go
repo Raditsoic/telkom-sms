@@ -16,31 +16,24 @@ func NewTransactionService(log repository.TransactionRepository, item repository
 	return &TransactionService{logRepository: log, itemRepository: item}
 }
 
-// func (s* TransactionService) CreateInsertionTransaction(id, quantity int) (*model.InsertionTransaction, error) {
-// 	item, err := s.itemRepository.GetItemByID(fmt.Sprintf("%d", id))
-// 	if err != nil {
-// 		return nil, fmt.Errorf("item not found: %w", err)
-// 	}
+func (s *TransactionService) CreateInsertionTransaction(insertion *model.InsertionTransaction) (*model.InsertionTransaction, error) {
+	// Create the new item
+	item, err := s.itemRepository.CreateItem(&insertion.Item)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create item: %w", err)
+	}
 
-// 	item.Quantity += quantity
-// 	if err := s.itemRepository.UpdateItem(*item); err != nil {
-// 		return nil, fmt.Errorf("failed to update item quantity: %w", err)
-// 	}
+	// Set the item ID in the insertion transaction
+	insertion.ItemID = item.ID
 
-// 	insertion := model.InsertionTransaction{
-// 		ItemID:   uint(id),
-// 		Quantity: quantity,
-// 	}
+	// Create the insertion transaction
+	if err := s.logRepository.CreateInsertionTransaction(insertion); err != nil {
+		return nil, fmt.Errorf("failed to create insertion transaction: %w", err)
+	}
 
-// 	if err := s.logRepository.CreateInsertionTransaction(insertion); err != nil {
-// 		item.Quantity -= quantity
-// 		_ = s.itemRepository.UpdateItem(*item)
-// 		return nil, fmt.Errorf("failed to create insertion transaction log: %w", err)
-// 	}
+	return insertion, nil
+}
 
-// 	return &insertion, nil
-// }
-	
 func (s *TransactionService) GetTransactions(page, limit int) ([]model.Transaction, error) {
 	var transactions []model.Transaction
 	offset := (page - 1) * limit
@@ -168,5 +161,23 @@ func (s *TransactionService) CreateInquiryTransaction(inquiry model.InquiryTrans
 	return &inquiry, nil
 }
 
+// func (s *TransactionService) UpdateTransaction(payload model.UpdateTransactionRequest) (*model.LoanTransaction, error) {
+// 	parts := strings.Split(payload.TransactionID, "_")
+// 	if len(parts) != 2 {
+// 		return nil, fmt.Errorf("invalid input format")
+// 	}
 
+// 	transType := parts[0]
+// 	id, err := strconv.Atoi(parts[1])
+// 	if err != nil {
+// 		return nil, fmt.Errorf("invalid ID format")
+// 	}
 
+// 	if transType == "loan" {
+// 		return s.logRepository.UpdateLoanTransaction(id, payload.Status)
+// 	} else if transType == "inquiry" {
+// 		return s.logRepository.UpdateInquiryTransaction(id, payload.Status)
+// 	}
+
+// 	return nil, fmt.Errorf("invalid transaction")
+// }

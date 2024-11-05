@@ -15,13 +15,12 @@ func NewItemRepository(db *gorm.DB) *ItemRepository {
 	return &ItemRepository{db: db}
 }
 
-func (repo *ItemRepository) CreateItem(item *model.Item) error {
+func (repo *ItemRepository) CreateItem(item *model.Item) (*model.Item, error) {
 	if err := repo.db.Create(item).Error; err != nil {
-		return fmt.Errorf("failed to create item: %w", err)
+		return nil, fmt.Errorf("failed to create item: %w", err)
 	}
-	return nil
+	return item, nil
 }
-
 func (repo *ItemRepository) GetItemByID(id string) (*model.Item, error) {
 	var item model.Item
 	if err := repo.db.Where("id = ?", id).First(&item).Error; err != nil {
