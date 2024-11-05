@@ -3,8 +3,8 @@ package repository
 import (
 	"fmt"
 
-	"gtihub.com/raditsoic/telkom-storage-ms/database"
-	"gtihub.com/raditsoic/telkom-storage-ms/model"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/database"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
 )
 
 func GetAdminByUsername(username string) (*model.Admin, error) {

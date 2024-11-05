@@ -9,10 +9,10 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
-	"gtihub.com/raditsoic/telkom-storage-ms/database"
-	"gtihub.com/raditsoic/telkom-storage-ms/database/repository"
-	"gtihub.com/raditsoic/telkom-storage-ms/model"
-	"gtihub.com/raditsoic/telkom-storage-ms/service"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/database"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/database/repository"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/service"
 )
 
 func main() {
@@ -66,26 +66,26 @@ func main() {
 			return
 		}
 	}).Methods("GET")
-	r.HandleFunc("/api/item", func(w http.ResponseWriter, r *http.Request) {
-		var item model.Item
-		if err := json.NewDecoder(r.Body).Decode(&item); err != nil {
-			http.Error(w, "Invalid request body", http.StatusBadRequest)
-			return
-		}
-		defer r.Body.Close()
+	// r.HandleFunc("/api/item", func(w http.ResponseWriter, r *http.Request) {
+	// 	var item model.Item
+	// 	if err := json.NewDecoder(r.Body).Decode(&item); err != nil {
+	// 		http.Error(w, "Invalid request body", http.StatusBadRequest)
+	// 		return
+	// 	}
+	// 	defer r.Body.Close()
 
-		createdItem, err := itemService.CreateItem(&item)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+	// 	createdItem, err := itemService.CreateItem(&item)
+	// 	if err != nil {
+	// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 		return
+	// 	}
 
-		w.WriteHeader(http.StatusCreated)
-		if err := json.NewEncoder(w).Encode(createdItem); err != nil {
-			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-			return
-		}
-	}).Methods("POST")
+	// 	w.WriteHeader(http.StatusCreated)
+	// 	if err := json.NewEncoder(w).Encode(createdItem); err != nil {
+	// 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	// 		return
+	// 	}
+	// }).Methods("POST")
 	r.HandleFunc("/api/item/{id}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -276,7 +276,27 @@ func main() {
 			return
 		}
 	}).Methods("DELETE")
-	// r.HandleFunc("/api/storage/{id}", service.GetStorageByID).Methods("GET")
+	r.HandleFunc("/api/storage/{id}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["id"]
+		idInt, err := strconv.Atoi(id)
+		if err != nil {
+			http.Error(w, "Invalid storage ID", http.StatusBadRequest)
+			return
+		}
+
+		storage, err := StorageService.GetStorageByID(idInt)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(storage); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			return
+		}
+	}).Methods("GET")
 
 	// Transaction routes
 	r.HandleFunc("/api/transactions", func(w http.ResponseWriter, r *http.Request) {
@@ -304,10 +324,10 @@ func main() {
 	r.HandleFunc("/api/transaction/loan/{id}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id, err := strconv.ParseUint(vars["id"], 10, 32)
-        if err != nil {
-            http.Error(w, "Invalid ID", http.StatusBadRequest)
-            return
-        }
+		if err != nil {
+			http.Error(w, "Invalid ID", http.StatusBadRequest)
+			return
+		}
 
 		transaction, err := TransactionService.GetLoanTransactionByID(uint(id))
 		if err != nil {
@@ -323,10 +343,10 @@ func main() {
 	r.HandleFunc("/api/transaction/inquiry/{id}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id, err := strconv.ParseUint(vars["id"], 10, 32)
-        if err != nil {
-            http.Error(w, "Invalid ID", http.StatusBadRequest)
-            return
-        }
+		if err != nil {
+			http.Error(w, "Invalid ID", http.StatusBadRequest)
+			return
+		}
 
 		transaction, err := TransactionService.GetInquiryTransactionByID(uint(id))
 		if err != nil {

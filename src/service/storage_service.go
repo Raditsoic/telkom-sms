@@ -3,8 +3,8 @@ package service
 import (
 	"encoding/json"
 
-	"gtihub.com/raditsoic/telkom-storage-ms/database/repository"
-	"gtihub.com/raditsoic/telkom-storage-ms/model"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/database/repository"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
 )
 
 type StorageService struct {
@@ -43,25 +43,25 @@ func (service *StorageService) DeleteStorage(id int) error {
 	return service.repository.DeleteStorage(id)
 }
 
-// func (service *StorageService) GetStorageByID(w http.ResponseWriter, r *http.Request) {
-// 	vars := mux.Vars(r)
-// 	idStr := vars["id"]
+func (service *StorageService) GetStorageByID(id int) (*model.StorageByIDResponse, error) {
 
-// 	id, err := strconv.Atoi(idStr)
-// 	if err != nil {
-// 		http.Error(w, "Invalid ID format", http.StatusBadRequest)
-// 		return
-// 	}
+	storage, err := service.repository.GetStorageByIDwithCategories(id)
+	if err != nil {
+		return nil, err
+	}
 
-// 	storage, err := repository.GetStorageByIDwithCategories(id)
-// 	if err != nil {
-// 		http.Error(w, "Failed to retrieve storage: "+err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
+	var categories []model.StorageCategoryResponse
+	for _, category := range storage.Categories {
+		categories = append(categories, model.StorageCategoryResponse{
+			ID:        category.ID,
+			Name:      category.Name,
+		})
+	}
 
-// 	w.Header().Set("Content-Type", "application/json")
-// 	if err := json.NewEncoder(w).Encode(storage); err != nil {
-// 		http.Error(w, "Failed to encode response: "+err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-// }
+	return &model.StorageByIDResponse{
+		ID:         storage.ID,
+		Name:       storage.Name,
+		Location:   storage.Location,
+		Categories: categories,
+	}, nil
+}

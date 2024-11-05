@@ -3,8 +3,8 @@ package service
 import (
 	"fmt"
 
-	"gtihub.com/raditsoic/telkom-storage-ms/database/repository"
-	"gtihub.com/raditsoic/telkom-storage-ms/model"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/database/repository"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
 )
 
 type TransactionService struct {
@@ -16,8 +16,33 @@ func NewTransactionService(log repository.TransactionRepository, item repository
 	return &TransactionService{logRepository: log, itemRepository: item}
 }
 
-func (s *TransactionService) GetTransactions(page, limit int) ([]model.UnifiedTransaction, error) {
-	var transactions []model.UnifiedTransaction
+// func (s* TransactionService) CreateInsertionTransaction(id, quantity int) (*model.InsertionTransaction, error) {
+// 	item, err := s.itemRepository.GetItemByID(fmt.Sprintf("%d", id))
+// 	if err != nil {
+// 		return nil, fmt.Errorf("item not found: %w", err)
+// 	}
+
+// 	item.Quantity += quantity
+// 	if err := s.itemRepository.UpdateItem(*item); err != nil {
+// 		return nil, fmt.Errorf("failed to update item quantity: %w", err)
+// 	}
+
+// 	insertion := model.InsertionTransaction{
+// 		ItemID:   uint(id),
+// 		Quantity: quantity,
+// 	}
+
+// 	if err := s.logRepository.CreateInsertionTransaction(insertion); err != nil {
+// 		item.Quantity -= quantity
+// 		_ = s.itemRepository.UpdateItem(*item)
+// 		return nil, fmt.Errorf("failed to create insertion transaction log: %w", err)
+// 	}
+
+// 	return &insertion, nil
+// }
+	
+func (s *TransactionService) GetTransactions(page, limit int) ([]model.Transaction, error) {
+	var transactions []model.Transaction
 	offset := (page - 1) * limit
 
 	loanTransactions, err := s.logRepository.GetLoanTransactions(limit, offset)
@@ -25,7 +50,7 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.UnifiedTr
 		return nil, err
 	}
 	for _, loan := range loanTransactions {
-		transaction := model.UnifiedTransaction{
+		transaction := model.Transaction{
 			ID:                 loan.ID,
 			TransactionType:    "Peminjaman",
 			GlobalID:           fmt.Sprintf("loan_%d", loan.ID),
@@ -53,7 +78,7 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.UnifiedTr
 		return nil, err
 	}
 	for _, inquiry := range inquiryTransactions {
-		transaction := model.UnifiedTransaction{
+		transaction := model.Transaction{
 			ID:                 inquiry.ID,
 			GlobalID:           fmt.Sprintf("inquiry_%d", inquiry.ID),
 			TransactionType:    "Permintaan",
@@ -77,7 +102,7 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.UnifiedTr
 	return transactions, nil
 }
 
-func (s *TransactionService) GetLoanTransactionByID(id uint) (*model.UnifiedTransaction, error) {
+func (s *TransactionService) GetLoanTransactionByID(id uint) (*model.Transaction, error) {
 	loan, err := s.logRepository.GetLoanTransactionByID(id)
 	if err != nil {
 		return nil, err
@@ -86,7 +111,7 @@ func (s *TransactionService) GetLoanTransactionByID(id uint) (*model.UnifiedTran
 	return loan, nil
 }
 
-func (s *TransactionService) GetInquiryTransactionByID(id uint) (*model.UnifiedTransaction, error) {
+func (s *TransactionService) GetInquiryTransactionByID(id uint) (*model.Transaction, error) {
 	inquiry, err := s.logRepository.GetInquiryTransactionByID(id)
 	if err != nil {
 		return nil, err
@@ -142,3 +167,6 @@ func (s *TransactionService) CreateInquiryTransaction(inquiry model.InquiryTrans
 	}
 	return &inquiry, nil
 }
+
+
+

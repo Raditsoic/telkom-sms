@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"gtihub.com/raditsoic/telkom-storage-ms/database/repository"
-	"gtihub.com/raditsoic/telkom-storage-ms/model"
-	"gtihub.com/raditsoic/telkom-storage-ms/utils"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/database/repository"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/utils"
 )
 
 type LoginRequest struct {
