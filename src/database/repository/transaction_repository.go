@@ -116,6 +116,15 @@ func (repository *TransactionRepository) GetInsertionTransactions(limit, offset 
 	return insertTransactions, nil
 }
 
+func (repository *TransactionRepository) GetInsertionTransactionByID(id uint) (*model.InsertionTransaction, error) {
+	var insert model.InsertionTransaction
+	if err := repository.db.Preload("Item").Where("id = ?", id).First(&insert).Error; err != nil {
+		return nil, fmt.Errorf("failed to get insertion transaction: %w", err)
+	}
+
+	return &insert, nil
+}
+
 // func (repository *TransactionRepository) GetTransactionByID(id int) (*model.Transaction, error) {
 // 	var transaction model.Transaction
 

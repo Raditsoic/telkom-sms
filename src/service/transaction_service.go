@@ -18,7 +18,6 @@ func NewTransactionService(log repository.TransactionRepository, item repository
 }
 
 func (s *TransactionService) CreateInsertionTransaction(insertion *model.InsertionTransaction) (*model.InsertionTransaction, error) {
-	// Create the new item
 	item, err := s.itemRepository.CreateItem(&insertion.Item)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create item: %w", err)
@@ -32,6 +31,15 @@ func (s *TransactionService) CreateInsertionTransaction(insertion *model.Inserti
 	// Create the insertion transaction
 	if err := s.logRepository.CreateInsertionTransaction(insertion); err != nil {
 		return nil, fmt.Errorf("failed to create insertion transaction: %w", err)
+	}
+
+	return insertion, nil
+}
+
+func (s *TransactionService) GetInsertionTransactionByID(id uint) (*model.InsertionTransaction, error) {
+	insertion, err := s.logRepository.GetInsertionTransactionByID(id)
+	if err != nil {
+		return nil, err
 	}
 
 	return insertion, nil

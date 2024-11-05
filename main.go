@@ -96,6 +96,25 @@ func main() {
 			return
 		}
 	}).Methods("DELETE")
+	r.HandleFunc("/api/item", func(w http.ResponseWriter, r *http.Request) {
+		var item model.Item
+		if err := json.NewDecoder(r.Body).Decode(&item); err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		createdItem, err := itemService.CreateItem(&item)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusCreated)
+		if err := json.NewEncoder(w).Encode(createdItem); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			return
+		}
+	}).Methods("POST")
 
 	// Category routes
 	r.HandleFunc("/api/categories", func(w http.ResponseWriter, r *http.Request) {
@@ -339,6 +358,25 @@ func main() {
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		}
 	}).Methods("GET")
+	r.HandleFunc("/api/transaction/insert/{id}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id, err := strconv.ParseUint(vars["id"], 10, 32)
+		if err != nil {
+			http.Error(w, "Invalid ID", http.StatusBadRequest)
+			return
+		}
+
+		transaction, err := TransactionService.GetInsertionTransactionByID(uint(id))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(transaction); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		}
+	}).Methods("GET")
 	r.HandleFunc("/api/transaction/loan", func(w http.ResponseWriter, r *http.Request) {
 		var req model.LoanTransaction
 
@@ -402,29 +440,9 @@ func main() {
 			return
 		}
 	}).Methods("POST")
-	// r.HandleFunc("/api/transaction", func(w http.ResponseWriter, r *http.Request) {
-	// 	var transaction model.Transaction
-	// 	if err := json.NewDecoder(r.Body).Decode(&transaction); err != nil {
-	// 		http.Error(w, "Invalid request body", http.StatusBadRequest)
-	// 		return
-	// 	}
-	// 	defer r.Body.Close()
 
-	// 	createdTransaction, err := TransactionService.CreateTransaction(&transaction)
-	// 	if err != nil {
-	// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 		return
-	// 	}
-
-	// 	w.WriteHeader(http.StatusCreated)
-	// 	if err := json.NewEncoder(w).Encode(createdTransaction); err != nil {
-	// 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-	// 		return
-	// 	}
-	// }).Methods("POST")
-
-
-	// r.HandleFunc("/api/transaction/loan/{id}", func(w http.ResponseWriter, r *http.Request) {
+	// Update transaction (Approve/Reject)
+	// r.HandleFunc("/api/transaction/loan/{id}/{status}", func(w http.ResponseWriter, r *http.Request) {
 	// 	vars := mux.Vars(r)
 	// 	id, err := strconv.ParseUint(vars["id"], 10, 32)
 	// 	if err != nil {
@@ -432,17 +450,79 @@ func main() {
 	// 		return
 	// 	}
 
-	// 	transaction, err := TransactionService.UpdateLoanTransaction(uint(id))
+	// 	status := vars["status"]
+	// 	if status != "approve" && status != "reject" {
+	// 		http.Error(w, "Invalid status", http.StatusBadRequest)
+	// 		return
+	// 	}
+
+	// 	transaction, err := TransactionService.UpdateLoanTransaction(uint(id), status)
 	// 	if err != nil {
 	// 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	// 		return
 	// 	}
 
 	// 	w.Header().Set("Content-Type", "application/json")
+	// 	w.WriteHeader(http.StatusOK)
 	// 	if err := json.NewEncoder(w).Encode(transaction); err != nil {
 	// 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	// 		return
 	// 	}
-	// }).Methods("UPDATE")
+	// }).Methods("PATCH")
+	// r.HandleFunc("/api/transaction/inquiry/{id}/{status}", func(w http.ResponseWriter, r *http.Request) {
+	// 	vars := mux.Vars(r)
+	// 	id, err := strconv.ParseUint(vars["id"], 10, 32)
+	// 	if err != nil {
+	// 		http.Error(w, "Invalid ID", http.StatusBadRequest)
+	// 		return
+	// 	}
+
+	// 	status := vars["status"]
+	// 	if status != "approve" && status != "reject" {
+	// 		http.Error(w, "Invalid status", http.StatusBadRequest)
+	// 		return
+	// 	}
+
+	// 	transaction, err := TransactionService.UpdateInquiryTransaction(uint(id), status)
+	// 	if err != nil {
+	// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 		return
+	// 	}
+
+	// 	w.Header().Set("Content-Type", "application/json")
+	// 	w.WriteHeader(http.StatusOK)
+	// 	if err := json.NewEncoder(w).Encode(transaction); err != nil {
+	// 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	// 		return
+	// 	}
+	// }).Methods("PATCH")
+	// r.HandleFunc("/api/transaction/insert/{id}/{status}", func(w http.ResponseWriter, r *http.Request) {
+	// 	vars := mux.Vars(r)
+	// 	id, err := strconv.ParseUint(vars["id"], 10, 32)
+	// 	if err != nil {
+	// 		http.Error(w, "Invalid ID", http.StatusBadRequest)
+	// 		return
+	// 	}
+
+	// 	status := vars["status"]
+	// 	if status != "approve" && status != "reject" {
+	// 		http.Error(w, "Invalid status", http.StatusBadRequest)
+	// 		return
+	// 	}
+
+	// 	transaction, err := TransactionService.UpdateInsertionTransaction(uint(id), status)
+	// 	if err != nil {
+	// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 		return
+	// 	}
+
+	// 	w.Header().Set("Content-Type", "application/json")
+	// 	w.WriteHeader(http.StatusOK)
+	// 	if err := json.NewEncoder(w).Encode(transaction); err != nil {
+	// 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	// 		return
+	// 	}
+	// }).Methods("PATCH")
 
 	// CORS configuration
 	c := cors.New(cors.Options{

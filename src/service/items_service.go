@@ -29,17 +29,14 @@ func (service *ItemService) GetItems(pageParam, limitParam string) ([]model.Item
 	return service.itemRepository.GetItems(limit, offset)
 }
 
-// func (service *ItemService) CreateItem(item *model.Item) (*model.Item, error) {
-// 	if err := service.itemRepository.CreateItem(item); err != nil {
-// 		return nil, err
-// 	}
+func (service *ItemService) CreateItem(item *model.Item) (*model.Item, error) {
+	item, err := service.itemRepository.CreateItem(item)
+	if err != nil {
+		return nil, err
+	}
 
-// 	if err := service.logRepository.CreateInsertionTransaction(item); err != nil {
-// 		return nil, err
-// 	}
-
-// 	return item, nil
-// }
+	return item, nil
+}
 
 func (service *ItemService) GetItemByID(id string) (*model.Item, error) {
 	return service.itemRepository.GetItemByID(id)
