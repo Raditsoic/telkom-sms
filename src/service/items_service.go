@@ -3,16 +3,16 @@ package service
 import (
 	"strconv"
 
-	"gtihub.com/raditsoic/telkom-storage-ms/database/repository"
-	"gtihub.com/raditsoic/telkom-storage-ms/model"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/database/repository"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
 )
 
 type ItemService struct {
-	repository repository.ItemRepository
+	itemRepository repository.ItemRepository
 }
 
 func NewItemService(repo repository.ItemRepository) *ItemService {
-	return &ItemService{repository: repo}
+	return &ItemService{itemRepository: repo}
 }
 
 func (service *ItemService) GetItems(pageParam, limitParam string) ([]model.Item, error) {
@@ -26,11 +26,12 @@ func (service *ItemService) GetItems(pageParam, limitParam string) ([]model.Item
 	}
 
 	offset := (page - 1) * limit
-	return service.repository.GetItems(limit, offset)
+	return service.itemRepository.GetItems(limit, offset)
 }
 
 func (service *ItemService) CreateItem(item *model.Item) (*model.Item, error) {
-	if err := service.repository.CreateItem(item); err != nil {
+	item, err := service.itemRepository.CreateItem(item)
+	if err != nil {
 		return nil, err
 	}
 
@@ -38,20 +39,7 @@ func (service *ItemService) CreateItem(item *model.Item) (*model.Item, error) {
 }
 
 func (service *ItemService) GetItemByID(id string) (*model.Item, error) {
-	return service.repository.GetItemByID(id)
-}
-
-func (service *ItemService) UpdateItem(item *model.Item) (*model.Item, error) {
-	_, err := service.GetItemByID(strconv.FormatUint(uint64(item.ID), 10))
-	if err != nil {
-		return item, err
-	}
-
-	if err = service.repository.UpdateItem(*item); err != nil {
-		return nil, err
-	}
-
-	return item, nil
+	return service.itemRepository.GetItemByID(id)
 }
 
 func (service *ItemService) DeleteItem(id string) error {
@@ -60,10 +48,10 @@ func (service *ItemService) DeleteItem(id string) error {
 		return err
 	}
 
-	err = service.repository.DeleteItem(id)
+	err = service.itemRepository.DeleteItem(id)
 	if err != nil {
 		return err
 	}
 
-	return service.repository.DeleteItem(id)
+	return service.itemRepository.DeleteItem(id)
 }

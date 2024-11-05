@@ -8,7 +8,7 @@ import (
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"gtihub.com/raditsoic/telkom-storage-ms/model"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
 )
 
 func Connect() (*gorm.DB, error) {
@@ -37,6 +37,8 @@ func Connect() (*gorm.DB, error) {
 		&model.Category{},
 		&model.LoanTransaction{},
 		&model.InquiryTransaction{},
+		&model.Transaction{},
+		&model.InsertionTransaction{},
 	); err != nil {
 		log.Fatalf("Could not migrate: %v", err)
 	}

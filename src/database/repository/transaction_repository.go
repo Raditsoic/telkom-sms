@@ -2,10 +2,9 @@ package repository
 
 import (
 	"fmt"
-	"time"
 
 	"gorm.io/gorm"
-	"gtihub.com/raditsoic/telkom-storage-ms/model"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
 )
 
 type TransactionRepository struct {
@@ -16,20 +15,12 @@ func NewTransactionRepository(db *gorm.DB) *TransactionRepository {
 	return &TransactionRepository{db: db}
 }
 
-func (repository *TransactionRepository) CreateTransaction(transaction *model.Transaction) error {
-	if err := repository.db.Create(&transaction).Error; err != nil {
-		return fmt.Errorf("failed to create transaction: %w", err)
-	}
-
-	return nil
-}
-
-func (repository *TransactionRepository) GetLoanTransactionByID(id uint) (*model.UnifiedTransaction, error) {
-	var transaction model.UnifiedTransaction
+func (repository *TransactionRepository) GetLoanTransactionByID(id uint) (*model.Transaction, error) {
+	var transaction model.Transaction
 
 	var loan model.LoanTransaction
 	if err := repository.db.Preload("Item").Where("id = ?", id).First(&loan).Error; err == nil {
-		transaction = model.UnifiedTransaction{
+		transaction = model.Transaction{
 			ID:                 loan.ID,
 			TransactionType:    "loan",
 			EmployeeName:       loan.EmployeeName,
@@ -50,12 +41,12 @@ func (repository *TransactionRepository) GetLoanTransactionByID(id uint) (*model
 	return nil, gorm.ErrRecordNotFound
 }
 
-func (repository *TransactionRepository) GetInquiryTransactionByID(id uint) (*model.UnifiedTransaction, error) {
-	var transaction model.UnifiedTransaction
+func (repository *TransactionRepository) GetInquiryTransactionByID(id uint) (*model.Transaction, error) {
+	var transaction model.Transaction
 
 	var inquiry model.InquiryTransaction
 	if err := repository.db.Preload("Item").Where("id = ?", id).First(&inquiry).Error; err == nil {
-		transaction = model.UnifiedTransaction{
+		transaction = model.Transaction{
 			ID:                 inquiry.ID,
 			TransactionType:    "inquiry",
 			EmployeeName:       inquiry.EmployeeName,
@@ -75,10 +66,6 @@ func (repository *TransactionRepository) GetInquiryTransactionByID(id uint) (*mo
 }
 
 func (repository *TransactionRepository) CreateLoanTransaction(loan model.LoanTransaction) error {
-	loan.LoanTime = time.Now()
-	loan.Time = time.Now()
-	loan.Status = "Pending"
-
 	if err := repository.db.Create(&loan).Error; err != nil {
 		return fmt.Errorf("failed to create loan transaction: %w", err)
 	}
@@ -87,11 +74,16 @@ func (repository *TransactionRepository) CreateLoanTransaction(loan model.LoanTr
 }
 
 func (repository *TransactionRepository) CreateInquiryTransaction(inquiry model.InquiryTransaction) error {
-	inquiry.Time = time.Now()
-	inquiry.Status = "Pending"
-
 	if err := repository.db.Create(&inquiry).Error; err != nil {
 		return fmt.Errorf("failed to create loan transaction: %w", err)
+	}
+
+	return nil
+}
+
+func (repository *TransactionRepository) CreateInsertionTransaction(insert *model.InsertionTransaction) error {
+	if err := repository.db.Create(insert).Error; err != nil {
+		return fmt.Errorf("failed to create insert transaction: %w", err)
 	}
 
 	return nil
@@ -115,12 +107,30 @@ func (repository *TransactionRepository) GetInquiryTransactions(limit, offset in
 	return inquiryTransactions, nil
 }
 
-// func (repository *TransactionRepository) GetTransactionByID(id int) (*model.UnifiedTransaction, error) {
-// 	var transaction model.UnifiedTransaction
+func (repository *TransactionRepository) GetInsertionTransactions(limit, offset int) ([]model.InsertionTransaction, error) {
+	var insertTransactions []model.InsertionTransaction
+	if err := repository.db.Preload("Item").Limit(limit).Offset(offset).Find(&insertTransactions).Error; err != nil {
+		return nil, fmt.Errorf("failed to get insert transactions: %w", err)
+	}
+
+	return insertTransactions, nil
+}
+
+func (repository *TransactionRepository) GetInsertionTransactionByID(id uint) (*model.InsertionTransaction, error) {
+	var insert model.InsertionTransaction
+	if err := repository.db.Preload("Item").Where("id = ?", id).First(&insert).Error; err != nil {
+		return nil, fmt.Errorf("failed to get insertion transaction: %w", err)
+	}
+
+	return &insert, nil
+}
+
+// func (repository *TransactionRepository) GetTransactionByID(id int) (*model.Transaction, error) {
+// 	var transaction model.Transaction
 
 // 	var loan model.LoanTransaction
 // 	if err := repository.db.Preload("Item").Where("id = ?", id).First(&loan).Error; err == nil {
-// 		transaction = model.UnifiedTransaction{
+// 		transaction = model.Transaction{
 // 			ID:                 loan.ID,
 // 			TransactionType:    "loan",
 // 			EmployeeName:       loan.EmployeeName,
@@ -139,7 +149,7 @@ func (repository *TransactionRepository) GetInquiryTransactions(limit, offset in
 
 // 	var inquiry model.InquiryTransaction
 // 	if err := repository.db.Preload("Item").Where("id = ?", id).First(&inquiry).Error; err == nil {
-// 		transaction = model.UnifiedTransaction{
+// 		transaction = model.Transaction{
 // 			ID:                 inquiry.ID,
 // 			TransactionType:    "inquiry",
 // 			EmployeeName:       inquiry.EmployeeName,

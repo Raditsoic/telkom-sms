@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"gtihub.com/raditsoic/telkom-storage-ms/database/repository"
-	"gtihub.com/raditsoic/telkom-storage-ms/model"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/database/repository"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
 )
 
 type CategoryService struct {

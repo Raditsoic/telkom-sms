@@ -86,7 +86,7 @@ func main() {
 	}
 
 	// Clear existing data
-	if err := db.Exec("TRUNCATE TABLE loan_transactions, inquiry_transactions, items, categories, storages RESTART IDENTITY CASCADE").Error; err != nil {
+	if err := db.Exec("TRUNCATE TABLE insertion_transactions, loan_transactions, inquiry_transactions, items, categories, storages RESTART IDENTITY CASCADE").Error; err != nil {
 		log.Fatal("Failed to truncate tables:", err)
 	}
 

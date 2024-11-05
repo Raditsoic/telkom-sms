@@ -41,6 +41,11 @@ type CategoryWithItemsResponse struct {
 	Items     []Item  `json:"items"`
 }
 
+type StorageCategoryResponse struct {
+	ID        uint   `json:"id"`
+	Name      string `json:"name"`
+}
+
 /*
 {
     "name":"Pulpen",
