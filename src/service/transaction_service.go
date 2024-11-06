@@ -151,16 +151,6 @@ func (s *TransactionService) CreateLoanTransaction(loan model.LoanTransaction) (
 		return nil, fmt.Errorf("item not found: %w", err)
 	}
 
-	newQuantity := item.Quantity - loan.Quantity
-	if newQuantity < 0 {
-		return &model.LoanTransaction{}, fmt.Errorf("insufficient quantity")
-	}
-
-	item.Quantity = newQuantity
-	if err := s.itemRepository.UpdateItem(*item); err != nil {
-		return nil, fmt.Errorf("failed to update item quantity: %w", err)
-	}
-
 	loan.LoanTime = time.Now()
 	loan.Time = time.Now()
 	loan.Status = "Pending"
@@ -179,16 +169,6 @@ func (s *TransactionService) CreateInquiryTransaction(inquiry model.InquiryTrans
 		return nil, fmt.Errorf("item not found: %w", err)
 	}
 
-	newQuantity := item.Quantity - inquiry.Quantity
-	if newQuantity < 0 {
-		return &model.InquiryTransaction{}, fmt.Errorf("insufficient quantity")
-	}
-
-	item.Quantity = newQuantity
-	if err := s.itemRepository.UpdateItem(*item); err != nil {
-		return nil, fmt.Errorf("failed to update item quantity: %w", err)
-	}
-
 	inquiry.Time = time.Now()
 	inquiry.Status = "Pending"
 
@@ -199,6 +179,133 @@ func (s *TransactionService) CreateInquiryTransaction(inquiry model.InquiryTrans
 	}
 	return &inquiry, nil
 }
+
+func (s *TransactionService) UpdateLoanTransaction(id uint, status string) (*model.Transaction, error) {
+	loan, err := s.logRepository.GetLoanTransactionByID(id)
+	if err != nil {
+		return nil, fmt.Errorf("loan transaction not found: %w", err)
+	}
+
+	if loan.Status == "Returned" {
+		return nil, fmt.Errorf("loan transaction already returned")
+	}
+
+	item := loan.Item
+
+	switch status {
+	case "Returned":
+		item.Quantity += loan.Quantity
+		if err := s.itemRepository.UpdateItem(*item); err != nil {
+			return nil, fmt.Errorf("failed to update item quantity: %w", err)
+		}
+	case "Approved":
+		if item.Quantity < loan.Quantity {
+			return nil, fmt.Errorf("insufficient quantity")
+		}
+
+		item.Quantity -= loan.Quantity
+		if err := s.itemRepository.UpdateItem(*item); err != nil {
+			return nil, fmt.Errorf("failed to update item quantity: %w", err)
+		}
+	}
+
+	loan.Status = status
+	loanTransaction := &model.LoanTransaction{
+		ID:                 loan.ID,
+		EmployeeName:       loan.EmployeeName,
+		EmployeeDepartment: loan.EmployeeDepartment,
+		EmployeePosition:   loan.EmployeePosition,
+		Quantity:           loan.Quantity,
+		Status:             loan.Status,
+		Time:               loan.Time,
+		ItemID:             loan.ItemID,
+		Item:               loan.Item,
+		Notes:              loan.Notes,
+		LoanTime:           *loan.LoanTime,
+		ReturnTime:         *loan.ReturnTime,
+	}
+	if err := s.logRepository.UpdateLoanTransaction(loanTransaction); err != nil {
+		return nil, fmt.Errorf("failed to update loan transaction: %w", err)
+	}
+
+	return loan, nil
+}
+
+func (s *TransactionService) UpdateInquiryTransaction(id uint, status string) (*model.Transaction, error) {
+	inquiry, err := s.logRepository.GetInquiryTransactionByID(id)
+	if err != nil {
+		return nil, fmt.Errorf("inquiry transaction not found: %w", err)
+	}
+
+	item := inquiry.Item
+
+	switch status {
+	case "Approved":
+		if item.Quantity < inquiry.Quantity {
+			return nil, fmt.Errorf("insufficient quantity")
+		}
+
+		item.Quantity -= inquiry.Quantity
+		if err := s.itemRepository.UpdateItem(*item); err != nil {
+			return nil, fmt.Errorf("failed to update item quantity: %w", err)
+		}
+	}
+
+	inquiry.Status = status
+	inquiryTransaction := &model.InquiryTransaction{
+		ID:                 inquiry.ID,
+		EmployeeName:       inquiry.EmployeeName,
+		EmployeeDepartment: inquiry.EmployeeDepartment,
+		EmployeePosition:   inquiry.EmployeePosition,
+		Quantity:           inquiry.Quantity,
+		Status:             inquiry.Status,
+		Time:               inquiry.Time,
+		ItemID:             inquiry.ItemID,
+		Item:               inquiry.Item,
+		Notes:              inquiry.Notes,
+	}
+	if err := s.logRepository.UpdateInquiryTransaction(inquiryTransaction); err != nil {
+		return nil, fmt.Errorf("failed to update inquiry transaction: %w", err)
+	}
+
+	return inquiry, nil
+}
+
+func (s *TransactionService) UpdateInsertionTransaction(id uint, status string) (*model.InsertionTransaction, error) {
+	insertion, err := s.logRepository.GetInsertionTransactionByID(id)
+	if err != nil {
+		return nil, fmt.Errorf("insertion transaction not found: %w", err)
+	}
+
+	// item := insertion.Item
+
+	// // switch status {
+	// // case "Approved":
+	// // 	item.Quantity += insertion.Quantity
+	// // 	if err := s.itemRepository.UpdateItem(*item); err != nil {
+	// // 		return nil, fmt.Errorf("failed to update item quantity: %w", err)
+	// // 	}
+	// // }
+
+	insertion.Status = status
+	insertionTransaction := &model.InsertionTransaction{
+		ID:                 insertion.ID,
+		EmployeeName:       insertion.EmployeeName,
+		EmployeeDepartment: insertion.EmployeeDepartment,
+		EmployeePosition:   insertion.EmployeePosition,
+		Status:             insertion.Status,
+		Time:               insertion.Time,
+		ItemID:             insertion.ItemID,
+		Item:               insertion.Item,
+		Notes:              insertion.Notes,
+	}
+	if err := s.logRepository.UpdateInsertionTransaction(insertionTransaction); err != nil {
+		return nil, fmt.Errorf("failed to update insertion transaction: %w", err)
+	}
+
+	return insertion, nil
+}
+
 
 // func (s *TransactionService) UpdateTransaction(payload model.UpdateTransactionRequest) (*model.LoanTransaction, error) {
 // 	parts := strings.Split(payload.TransactionID, "_")
