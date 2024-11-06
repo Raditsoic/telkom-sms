@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
@@ -105,12 +106,14 @@ func main() {
 
 		createdItem, err := itemService.CreateItem(&item)
 		if err != nil {
+			log.Printf("Error creating item: %v", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		w.WriteHeader(http.StatusCreated)
 		if err := json.NewEncoder(w).Encode(createdItem); err != nil {
+			log.Printf("Error encoding response: %v", err)
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 			return
 		}
@@ -134,29 +137,64 @@ func main() {
 		}
 	}).Methods("GET")
 	r.HandleFunc("/api/category", func(w http.ResponseWriter, r *http.Request) {
-		var category model.Category
-		if err := json.NewDecoder(r.Body).Decode(&category); err != nil {
-			http.Error(w, "Invalid request body", http.StatusBadRequest)
+		// Set response header to application/json
+		w.Header().Set("Content-Type", "application/json")
+	
+		// Parse the multipart form with a maximum memory of 10MB
+		if err := r.ParseMultipartForm(10 << 20); err != nil {
+			http.Error(w, "Unable to parse form", http.StatusBadRequest)
 			return
 		}
-		defer r.Body.Close()
-
-		newCategory, err := json.Marshal(category)
+	
+		// Get form fields
+		name := r.FormValue("name")
+		storage_id := r.FormValue("storage_id")
+	
+		// Validate required fields
+		if name == "" || storage_id == "" {
+			http.Error(w, "Name and storage_id are required", http.StatusBadRequest)
+			return
+		}
+	
+		// Convert storage_id to uint
+		storageID, err := strconv.ParseUint(storage_id, 10, 32)
 		if err != nil {
-			http.Error(w, "Failed to marshal category", http.StatusInternalServerError)
+			http.Error(w, "Invalid storage_id format", http.StatusBadRequest)
 			return
 		}
-		createdCategory, err := categoryService.CreateCategory(newCategory)
+	
+		// Get the image file
+		file, _, err := r.FormFile("image")
+		if err != nil {
+			http.Error(w, "Image file is required", http.StatusBadRequest)
+			return
+		}
+		defer file.Close()
+	
+		// Read the image into a byte array
+		imageData, err := ioutil.ReadAll(file)
+		if err != nil {
+			http.Error(w, "Could not read image file", http.StatusInternalServerError)
+			return
+		}
+	
+		// Create category object
+		category := model.Category{
+			Name:      name,
+			StorageID: uint(storageID),
+			Image:     imageData,
+		}
+	
+		// Save to database
+		createdCategory, err := categoryService.CreateCategory(&category)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-
+	
+		// Send success response
 		w.WriteHeader(http.StatusCreated)
-		if err := json.NewEncoder(w).Encode(createdCategory); err != nil {
-			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-			return
-		}
+		json.NewEncoder(w).Encode(createdCategory)
 	}).Methods("POST")
 	r.HandleFunc("/api/category/{id}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)

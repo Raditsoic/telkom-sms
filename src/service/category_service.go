@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"strconv"
 
 	"gtihub.com/raditsoic/telkom-storage-ms/src/database/repository"
@@ -30,17 +29,12 @@ func (s *CategoryService) GetCategories(pageParam, limitParam string) ([]model.A
 	return s.repository.GetCategories(limit, offset)
 }
 
-func (s *CategoryService) CreateCategory(categoryData []byte) (*model.Category, error) {
-	var category model.Category
-	if err := json.Unmarshal(categoryData, &category); err != nil {
-		return nil, err
-	}
-
+func (s *CategoryService) CreateCategory(category *model.Category) (*model.Category, error) {
+	// Create in database
 	if err := s.repository.CreateCategory(category); err != nil {
 		return nil, err
 	}
-
-	return &category, nil
+	return category, nil
 }
 
 func (s *CategoryService) GetCategoryByID(id string) (*model.CategoryByIDResponse, error) {
@@ -59,6 +53,7 @@ func (service *CategoryService) GetCategoryWithItems(categoryID uint) (*model.Ca
 		StorageID: category.StorageID,
 		Storage:   category.Storage,
 		Items:     category.Items,
+		Image:     category.Image,
 	}
 
 	return response, nil
