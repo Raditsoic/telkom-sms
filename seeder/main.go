@@ -168,8 +168,8 @@ func main() {
 
 	// 1. Create Storages first
 	storages := []Storage{
-		{Name: "Gudang ATK", Location: "TSO Manyar"},
-		{Name: "Gudang A", Location: "TSO Manyar"},
+		{Name: "ATK", Location: "TSO Manyar"},
+		{Name: "A", Location: "TSO Manyar"},
 	}
 
 	if err := db.Create(&storages).Error; err != nil {
