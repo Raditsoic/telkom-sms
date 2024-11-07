@@ -277,15 +277,15 @@ func (s *TransactionService) UpdateInsertionTransaction(id uint, status string) 
 		return nil, fmt.Errorf("insertion transaction not found: %w", err)
 	}
 
-	// item := insertion.Item
+	item := insertion.Item
 
-	// // switch status {
-	// // case "Approved":
-	// // 	item.Quantity += insertion.Quantity
-	// // 	if err := s.itemRepository.UpdateItem(*item); err != nil {
-	// // 		return nil, fmt.Errorf("failed to update item quantity: %w", err)
-	// // 	}
-	// // }
+	switch status {
+	case "Approved":
+		item.Quantity += insertion.Item.Quantity
+		if err := s.itemRepository.UpdateItem(item); err != nil {
+			return nil, fmt.Errorf("failed to update item quantity: %w", err)
+		}
+	}
 
 	insertion.Status = status
 	insertionTransaction := &model.InsertionTransaction{

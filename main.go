@@ -506,7 +506,7 @@ func main() {
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 			return
 		}
-	}).Methods("PATCH")
+	}).Methods("PUT")
 	r.HandleFunc("/api/transaction/inquiry/{id}/{status}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id, err := strconv.ParseUint(vars["id"], 10, 32)
@@ -533,7 +533,7 @@ func main() {
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 			return
 		}
-	}).Methods("PATCH")
+	}).Methods("PUT")
 	r.HandleFunc("/api/transaction/insert/{id}/{status}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id, err := strconv.ParseUint(vars["id"], 10, 32)
@@ -560,7 +560,7 @@ func main() {
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 			return
 		}
-	}).Methods("PATCH")
+	}).Methods("PUT")
 
 	// CORS configuration
 	c := cors.New(cors.Options{
