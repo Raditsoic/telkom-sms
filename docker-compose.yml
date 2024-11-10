@@ -1,7 +1,8 @@
+name: sms-backend
 version: "3"
 
 services:
-    sms-backend:
+    app:
         build: .
         ports:
             - "8080:8080"

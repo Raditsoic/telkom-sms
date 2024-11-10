@@ -232,19 +232,9 @@ curl --location 'http://localhost:8080/api/transaction/loan' \
 ### Prerequisite
 - Docker Windows/Linux
 
+### **Start Container**
+To start the container use: `docker compose up --build`
+
 #### **Seed Database**
 
-> Delete Container dulu di Dockernya
-
-- Build Seeder: `docker compose build seeder`
-
-- Remove Container: `docker-compose down` 
-
-- Remove the database volume : `docker volume rm $(docker volume ls -q | grep db_postgres)`
-
-- Start services: `docker-compose up -d`
-
-- Run the seeder: `docker-compose --profile seeder up seeder`
-
-### Run With Docker
-`docker compose up --build`
+To run the seeder use: `docker-compose --profile seeder up seeder`
