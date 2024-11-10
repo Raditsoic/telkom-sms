@@ -17,28 +17,30 @@ func NewTransactionRepository(db *gorm.DB) *TransactionRepository {
 
 func (repository *TransactionRepository) GetLoanTransactionByID(id uint) (*model.Transaction, error) {
 	var transaction model.Transaction
-
 	var loan model.LoanTransaction
-	if err := repository.db.Preload("Item").Where("id = ?", id).First(&loan).Error; err == nil {
-		transaction = model.Transaction{
-			ID:                 loan.ID,
-			TransactionType:    "loan",
-			EmployeeName:       loan.EmployeeName,
-			EmployeeDepartment: loan.EmployeeDepartment,
-			EmployeePosition:   loan.EmployeePosition,
-			Quantity:           loan.Quantity,
-			Status:             loan.Status,
-			Time:               loan.Time,
-			ItemID:             loan.ItemID,
-			Item:               loan.Item,
-			LoanTime:           &loan.LoanTime,
-			ReturnTime:         &loan.ReturnTime,
-		}
 
-		return &transaction, nil
+	// Retrieve loan transaction with the associated item
+	if err := repository.db.Preload("Item").Where("id = ?", id).First(&loan).Error; err != nil {
+		return nil, gorm.ErrRecordNotFound
 	}
 
-	return nil, gorm.ErrRecordNotFound
+	// Map LoanTransaction to Transaction
+	transaction = model.Transaction{
+		ID:                 loan.ID,
+		TransactionType:    "loan",
+		EmployeeName:       loan.EmployeeName,
+		EmployeeDepartment: loan.EmployeeDepartment,
+		EmployeePosition:   loan.EmployeePosition,
+		Quantity:           loan.Quantity,
+		Status:             loan.Status,
+		Time:               loan.Time,
+		ItemID:             loan.ItemID,
+		Item:               loan.Item,
+		LoanTime:           &loan.LoanTime,
+		ReturnTime:         &loan.ReturnTime,
+	}
+
+	return &transaction, nil
 }
 
 func (repository *TransactionRepository) GetInquiryTransactionByID(id uint) (*model.Transaction, error) {
@@ -124,6 +126,29 @@ func (repository *TransactionRepository) GetInsertionTransactionByID(id uint) (*
 
 	return &insert, nil
 }
+
+func (repository *TransactionRepository) UpdateLoanTransaction(loan *model.LoanTransaction) error {
+	if err := repository.db.Save(loan).Error; err != nil {
+		return fmt.Errorf("failed to update loan transaction: %w", err)
+	}
+	return nil
+}
+
+func (repository *TransactionRepository) UpdateInquiryTransaction(inquiry *model.InquiryTransaction) error {
+	if err := repository.db.Save(inquiry).Error; err != nil {
+		return fmt.Errorf("failed to update inquiry transaction: %w", err)
+	}
+	return nil
+}
+
+func (repository *TransactionRepository) UpdateInsertionTransaction(insert *model.InsertionTransaction) error {
+	if err := repository.db.Save(insert).Error; err != nil {
+		return fmt.Errorf("failed to update insertion transaction: %w", err)
+	}
+	return nil
+}
+
+
 
 // func (repository *TransactionRepository) GetTransactionByID(id int) (*model.Transaction, error) {
 // 	var transaction model.Transaction

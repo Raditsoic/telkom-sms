@@ -53,8 +53,9 @@ func (service *StorageService) GetStorageByID(id int) (*model.StorageByIDRespons
 	var categories []model.StorageCategoryResponse
 	for _, category := range storage.Categories {
 		categories = append(categories, model.StorageCategoryResponse{
-			ID:        category.ID,
-			Name:      category.Name,
+			ID:    category.ID,
+			Name:  category.Name,
+			Image: category.Image,
 		})
 	}
 

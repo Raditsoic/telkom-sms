@@ -23,6 +23,7 @@ type Category struct {
 	StorageID uint    `json:"storage_id"`
 	Items     []Item  `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"items"`
 	Storage   Storage `gorm:"foreignKey:StorageID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"storage"`
+	Image     []byte  `json:"image"`
 }
 
 type Item struct {
@@ -59,6 +60,81 @@ type InquiryTransaction struct {
 	ItemID             uint      `json:"item_id"`
 	Item               *Item     `gorm:"foreignKey:ItemID" json:"item"`
 }
+
+type CategoryImages struct {
+	Amplop          []byte
+	Baterai         []byte
+	DoubleTape      []byte
+	PulpenFaster    []byte
+	Isolasi         []byte
+	KalkulatorJoyko []byte
+	Kertas          []byte
+	Lakban          []byte
+	Lem             []byte
+	Map             []byte
+	PaperClip       []byte
+	Stabilo         []byte
+	Staples         []byte
+}
+
+func LoadImages() (*CategoryImages, error) {
+	// Create a helper function to reduce repetition
+	loadImage := func(path string) ([]byte, error) {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read image %s: %v", path, err)
+		}
+		return data, nil
+	}
+
+	images := &CategoryImages{}
+	var err error
+
+	// Load all images
+	if images.Amplop, err = loadImage("./seeder/img/amplop.jpg"); err != nil {
+		return nil, err
+	}
+	if images.Baterai, err = loadImage("./seeder/img/baterai.jpg"); err != nil {
+		return nil, err
+	}
+	if images.DoubleTape, err = loadImage("./seeder/img/double_tape.jpg"); err != nil {
+		return nil, err
+	}
+	if images.PulpenFaster, err = loadImage("./seeder/img/faster.jpg"); err != nil {
+		return nil, err
+	}
+	if images.Isolasi, err = loadImage("./seeder/img/isolasi.jpg"); err != nil {
+		return nil, err
+	}
+	if images.KalkulatorJoyko, err = loadImage("./seeder/img/kalkulator_joyko.jpg"); err != nil {
+		return nil, err
+	}
+	if images.Kertas, err = loadImage("./seeder/img/kertas.jpg"); err != nil {
+		return nil, err
+	}
+	if images.Lakban, err = loadImage("./seeder/img/lakban.jpg"); err != nil {
+		return nil, err
+	}
+	if images.Lem, err = loadImage("./seeder/img/lem.jpg"); err != nil {
+		return nil, err
+	}
+	if images.Map, err = loadImage("./seeder/img/map.jpg"); err != nil {
+		return nil, err
+	}
+	if images.PaperClip, err = loadImage("./seeder/img/paper_clip.jpg"); err != nil {
+		return nil, err
+	}
+	if images.Stabilo, err = loadImage("./seeder/img/stabilo.jpg"); err != nil {
+		return nil, err
+	}
+	if images.Staples, err = loadImage("./seeder/img/staples.jpg"); err != nil {
+		return nil, err
+	}
+
+	return images, nil
+}
+
+
 func main() {
 	// Database connection setup
 	dbHost := os.Getenv("DB_HOST")
@@ -92,8 +168,8 @@ func main() {
 
 	// 1. Create Storages first
 	storages := []Storage{
-		{Name: "Gudang ATK", Location: "TSO Manyar"},
-		{Name: "Gudang A", Location: "TSO Manyar"},
+		{Name: "ATK", Location: "TSO Manyar"},
+		{Name: "A", Location: "TSO Manyar"},
 	}
 
 	if err := db.Create(&storages).Error; err != nil {
@@ -101,22 +177,27 @@ func main() {
 		return
 	}
 
+	images, err := LoadImages()
+	if err != nil {
+		return
+	}
+
 	// 2. Create Categories with valid StorageID references
 	categories := []Category{
-		{Name: "Amplop", StorageID: uint(storages[0].ID)},
-		{Name: "Kertas", StorageID: uint(storages[0].ID)},
-		{Name: "Baterai", StorageID: uint(storages[0].ID)},
-		{Name: "Pulpen Faster", StorageID: uint(storages[0].ID)},
-		{Name: "Double Tape", StorageID: uint(storages[0].ID)},
-		{Name: "Isolasi", StorageID: uint(storages[0].ID)},
-		{Name: "Kalkulator Joyko", StorageID: uint(storages[0].ID)},
-		{Name: "Lakban", StorageID: uint(storages[0].ID)},
-		{Name: "Lem", StorageID: uint(storages[0].ID)},
-		{Name: "Map", StorageID: uint(storages[0].ID)},
-		{Name: "Stabilo", StorageID: uint(storages[0].ID)},
-		{Name: "Staples", StorageID: uint(storages[0].ID)},
-		{Name: "Paper Clip", StorageID: uint(storages[0].ID)},
-	}
+        {Name: "Amplop", StorageID: uint(storages[0].ID), Image: images.Amplop},
+        {Name: "Kertas", StorageID: uint(storages[0].ID), Image: images.Kertas},
+        {Name: "Baterai", StorageID: uint(storages[0].ID), Image: images.Baterai},
+        {Name: "Pulpen Faster", StorageID: uint(storages[0].ID), Image: images.PulpenFaster},
+        {Name: "Double Tape", StorageID: uint(storages[0].ID), Image: images.DoubleTape},
+        {Name: "Isolasi", StorageID: uint(storages[0].ID), Image: images.Isolasi},
+        {Name: "Kalkulator Joyko", StorageID: uint(storages[0].ID), Image: images.KalkulatorJoyko},
+        {Name: "Lakban", StorageID: uint(storages[0].ID), Image: images.Lakban},
+        {Name: "Lem", StorageID: uint(storages[0].ID), Image: images.Lem},
+        {Name: "Map", StorageID: uint(storages[0].ID), Image: images.Map},
+        {Name: "Stabilo", StorageID: uint(storages[0].ID), Image: images.Stabilo},
+        {Name: "Staples", StorageID: uint(storages[0].ID), Image: images.Staples},
+        {Name: "Paper Clip", StorageID: uint(storages[0].ID), Image: images.PaperClip},
+    }
 
 	if err := db.Create(&categories).Error; err != nil {
 		log.Fatal("Failed to create categories:", err)

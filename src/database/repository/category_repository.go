@@ -22,7 +22,7 @@ func NewCategoryRepository(db *gorm.DB) *CategoryRepository {
 	return &CategoryRepository{db: db}
 }
 
-func (repo *CategoryRepository) CreateCategory(category model.Category) error {
+func (repo *CategoryRepository) CreateCategory(category *model.Category) error {
 	// Check if storage exists
 	var storage model.Storage
 	if err := repo.db.First(&storage, category.StorageID).Error; err != nil {
