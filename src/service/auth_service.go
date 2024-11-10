@@ -1,126 +1,100 @@
 package service
 
 import (
-	"encoding/json"
-	"net/http"
-
+	"golang.org/x/crypto/bcrypt"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/database/repository"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/utils"
 )
 
-type LoginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+type AuthService struct {
+	repository repository.AdminRepository
+	jwtUtils   *utils.JWTUtils
 }
 
-type RegisterRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+func NewAuthService(repo repository.AdminRepository, jwtUtils *utils.JWTUtils) *AuthService {
+	return &AuthService{
+		repository: repo,
+		jwtUtils:   jwtUtils,
+	}
 }
 
-func AdminLogin(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	var LoginReq LoginRequest
-	if err := json.NewDecoder(r.Body).Decode(&LoginReq); err != nil {
-		http.Error(w, "Bad request", http.StatusBadRequest)
-		return
-	}
-
-	admin, err := repository.GetAdminByUsername(LoginReq.Username)
+func (service *AuthService) AdminLogin(LoginReq *model.LoginRequest) (*model.LoginResponse, error) {
+	admin, err := service.repository.GetAdminByUsername(LoginReq.Username)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return nil, utils.ErrInvalidCredentials
 	}
 
-	if admin.Password != LoginReq.Password {
-		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
-		return
-	}
-
-	token, err := utils.GenerateJWT(admin.ID)
+	err = bcrypt.CompareHashAndPassword([]byte(admin.Password), []byte(LoginReq.Password))
 	if err != nil {
-		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
-		return
+		return nil, utils.ErrInvalidCredentials
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(map[string]string{"token": token}); err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	token, err := service.jwtUtils.GenerateJWT(admin.ID)
+	if err != nil {
+		return nil, err
 	}
+
+	response := &model.LoginResponse{
+		Token:    token,
+		Username: admin.Username,
+		Message:  "Login successful",
+	}
+
+	return response, nil
 }
 
-func AdminRegister(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
+func (service *AuthService) AdminRegister(RegisReq *model.RegisterRequest) (*model.RegisterResponse, error) {
+	_, err := service.repository.GetAdminByUsername(RegisReq.Username)
+	if err == nil {
+		return nil, utils.ErrUsernameExists
 	}
 
-	var RegisReq RegisterRequest
-	if err := json.NewDecoder(r.Body).Decode(&RegisReq); err != nil {
-		http.Error(w, "Bad request", http.StatusBadRequest)
-		return
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(RegisReq.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
 	}
 
 	admin := &model.Admin{
 		Username: RegisReq.Username,
-		Password: RegisReq.Password,
-	}
-	err := repository.RegisterAdmin(admin)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		Password: string(hashedPassword),
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	if _, err := w.Write([]byte(`{"message": "Admin created"}`)); err != nil {
-		http.Error(w, "Failed to send response", http.StatusInternalServerError)
+	err = service.repository.RegisterAdmin(admin)
+	if err != nil {
+		return nil, err
 	}
+
+	response := &model.RegisterResponse{
+		Username: admin.Username,
+		Message:  "Admin created",
+	}
+
+	return response, nil
 }
 
-func GetAdmin(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	admins, err := repository.GetAdmins()
+func (service *AuthService) GetAdmin() ([]model.Admin, error) {
+	admins, err := service.repository.GetAdmins()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return nil, err
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(admins); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-	}
+	return admins, nil
 }
 
-func DeleteAdmin(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodDelete {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
+func (service *AuthService) DeleteAdmin(id string) (*model.DeleteResponse, error) {
+	if id == "" {
+		return nil, utils.ErrInvalidID
 	}
 
-	adminID := r.URL.Query().Get("id")
-	if adminID == "" {
-		http.Error(w, "Bad request", http.StatusBadRequest)
-		return
-	}
-
-	err := repository.DeleteAdmin(adminID)
+	err := service.repository.DeleteAdmin(id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return nil, err
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if _, err := w.Write([]byte(`{"message": "Admin deleted"}`)); err != nil {
-		http.Error(w, "Failed to send response", http.StatusInternalServerError)
+	response := &model.DeleteResponse{
+		Message: "Admin deleted",
 	}
+
+	return response, nil
 }

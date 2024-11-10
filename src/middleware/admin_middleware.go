@@ -12,23 +12,23 @@ type contextKey string
 
 const AdminContextKey contextKey = "admin"
 
-func AuthMiddleware(next http.Handler) http.Handler {
+func AuthMiddleware(jwtUtils *utils.JWTUtils, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
-			next.ServeHTTP(w, r)
+			http.Error(w, "Authorization Header Missing", http.StatusUnauthorized)
 			return
 		}
 
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
-			http.Error(w, "Invalid Authorization header", http.StatusUnauthorized)
+			http.Error(w, "Invalid Authorization Header", http.StatusUnauthorized)
 			return
 		}
 
 		token := parts[1]
 
-		claims, err := utils.VerifyToken(token)
+		claims, err := jwtUtils.VerifyToken(token)
 		if err != nil {
 			http.Error(w, "Invalid token: "+err.Error(), http.StatusUnauthorized)
 			return

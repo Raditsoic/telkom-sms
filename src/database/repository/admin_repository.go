@@ -3,11 +3,20 @@ package repository
 import (
 	"fmt"
 
+	"gorm.io/gorm"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/database"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
 )
 
-func GetAdminByUsername(username string) (*model.Admin, error) {
+type AdminRepository struct {
+	db *gorm.DB
+}
+
+func NewAdminRepository(db *gorm.DB) *AdminRepository {
+	return &AdminRepository{db: db}
+}
+
+func (repository *AdminRepository) GetAdminByUsername(username string) (*model.Admin, error) {
 	db, err := database.Connect()
 	if err != nil {
 		return &model.Admin{}, fmt.Errorf("failed to connect to database: %w", err)
@@ -20,7 +29,7 @@ func GetAdminByUsername(username string) (*model.Admin, error) {
 	return &admin, nil
 }
 
-func RegisterAdmin(admin *model.Admin) error {
+func (repository *AdminRepository) RegisterAdmin(admin *model.Admin) error {
 	db, err := database.Connect()
 	if err != nil {
 		return fmt.Errorf("failed to connect to database: %w", err)
@@ -32,7 +41,7 @@ func RegisterAdmin(admin *model.Admin) error {
 	return nil
 }
 
-func GetAdmins() ([]model.Admin, error) {
+func (repository *AdminRepository) GetAdmins() ([]model.Admin, error) {
 	db, err := database.Connect()
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
@@ -45,7 +54,7 @@ func GetAdmins() ([]model.Admin, error) {
 	return admins, nil
 }
 
-func DeleteAdmin(adminID string) error {
+func(repository *AdminRepository) DeleteAdmin(adminID string) error {
 	db, err := database.Connect()
 	if err != nil {
 		return fmt.Errorf("failed to connect to database: %w", err)
