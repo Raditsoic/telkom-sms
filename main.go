@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -139,30 +139,30 @@ func main() {
 	r.HandleFunc("/api/category", func(w http.ResponseWriter, r *http.Request) {
 		// Set response header to application/json
 		w.Header().Set("Content-Type", "application/json")
-	
+
 		// Parse the multipart form with a maximum memory of 10MB
 		if err := r.ParseMultipartForm(10 << 20); err != nil {
 			http.Error(w, "Unable to parse form", http.StatusBadRequest)
 			return
 		}
-	
+
 		// Get form fields
 		name := r.FormValue("name")
 		storage_id := r.FormValue("storage_id")
-	
+
 		// Validate required fields
 		if name == "" || storage_id == "" {
 			http.Error(w, "Name and storage_id are required", http.StatusBadRequest)
 			return
 		}
-	
+
 		// Convert storage_id to uint
 		storageID, err := strconv.ParseUint(storage_id, 10, 32)
 		if err != nil {
 			http.Error(w, "Invalid storage_id format", http.StatusBadRequest)
 			return
 		}
-	
+
 		// Get the image file
 		file, _, err := r.FormFile("image")
 		if err != nil {
@@ -170,31 +170,34 @@ func main() {
 			return
 		}
 		defer file.Close()
-	
+
 		// Read the image into a byte array
-		imageData, err := ioutil.ReadAll(file)
+		imageData, err := io.ReadAll(file)
 		if err != nil {
 			http.Error(w, "Could not read image file", http.StatusInternalServerError)
 			return
 		}
-	
+
 		// Create category object
 		category := model.Category{
 			Name:      name,
 			StorageID: uint(storageID),
 			Image:     imageData,
 		}
-	
+
 		// Save to database
 		createdCategory, err := categoryService.CreateCategory(&category)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-	
+
 		// Send success response
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(createdCategory)
+		if err := json.NewEncoder(w).Encode(createdCategory); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			return
+		}
 	}).Methods("POST")
 	r.HandleFunc("/api/category/{id}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
