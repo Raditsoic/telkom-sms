@@ -6,11 +6,13 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/middleware"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/service"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/utils"
 )
 
-func TransactionRoutes(r *mux.Router, transactionService *service.TransactionService) {
+func TransactionRoutes(r *mux.Router, transactionService *service.TransactionService, jwtUtils *utils.JWTUtils) {
 	r.HandleFunc("/api/transactions", func(w http.ResponseWriter, r *http.Request) {
 		page, _ := strconv.Atoi(r.URL.Query().Get("page"))
 		if page < 1 {
@@ -137,7 +139,7 @@ func TransactionRoutes(r *mux.Router, transactionService *service.TransactionSer
 			return
 		}
 	}).Methods("POST")
-	
+
 	r.HandleFunc("/api/transaction/insert", func(w http.ResponseWriter, r *http.Request) {
 		var insert model.InsertionTransaction
 
@@ -160,7 +162,7 @@ func TransactionRoutes(r *mux.Router, transactionService *service.TransactionSer
 		}
 	}).Methods("POST")
 
-	r.HandleFunc("/api/transaction/loan/{id}/{status}", func(w http.ResponseWriter, r *http.Request) {
+	r.Handle("/api/transaction/loan/{id}/{status}", middleware.AuthMiddleware(jwtUtils, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id, err := strconv.ParseUint(vars["id"], 10, 32)
 		if err != nil {
@@ -186,9 +188,9 @@ func TransactionRoutes(r *mux.Router, transactionService *service.TransactionSer
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 			return
 		}
-	}).Methods("PUT")
-	
-	r.HandleFunc("/api/transaction/inquiry/{id}/{status}", func(w http.ResponseWriter, r *http.Request) {
+	}))).Methods("PUT")
+
+	r.Handle("/api/transaction/inquiry/{id}/{status}", middleware.AuthMiddleware(jwtUtils, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id, err := strconv.ParseUint(vars["id"], 10, 32)
 		if err != nil {
@@ -214,9 +216,9 @@ func TransactionRoutes(r *mux.Router, transactionService *service.TransactionSer
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 			return
 		}
-	}).Methods("PUT")
-	
-	r.HandleFunc("/api/transaction/insert/{id}/{status}", func(w http.ResponseWriter, r *http.Request) {
+	}))).Methods("PUT")
+
+	r.Handle("/api/transaction/insert/{id}/{status}", middleware.AuthMiddleware(jwtUtils, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id, err := strconv.ParseUint(vars["id"], 10, 32)
 		if err != nil {
@@ -242,5 +244,6 @@ func TransactionRoutes(r *mux.Router, transactionService *service.TransactionSer
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 			return
 		}
-	}).Methods("PUT")
+	}))).Methods("PUT")
+
 }

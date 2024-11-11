@@ -28,7 +28,6 @@ func (s *TransactionService) CreateInsertionTransaction(insertion *model.Inserti
 	insertion.Time = time.Now()
 	insertion.Status = "Pending"
 
-	// Create the insertion transaction
 	if err := s.logRepository.CreateInsertionTransaction(insertion); err != nil {
 		return nil, fmt.Errorf("failed to create insertion transaction: %w", err)
 	}

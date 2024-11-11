@@ -30,10 +30,10 @@ func (s *CategoryService) GetCategories(pageParam, limitParam string) ([]model.A
 }
 
 func (s *CategoryService) CreateCategory(category *model.Category) (*model.Category, error) {
-	// Create in database
 	if err := s.repository.CreateCategory(category); err != nil {
 		return nil, err
 	}
+	
 	return category, nil
 }
 
