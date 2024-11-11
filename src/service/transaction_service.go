@@ -18,12 +18,11 @@ func NewTransactionService(log repository.TransactionRepository, item repository
 }
 
 func (s *TransactionService) CreateInsertionTransaction(insertion *model.InsertionTransaction) (*model.InsertionTransaction, error) {
-	item, err := s.itemRepository.CreateItem(&insertion.Item)
+	_, err := s.itemRepository.CreateItem(&insertion.Item)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create item: %w", err)
 	}
 
-	insertion.ItemID = item.ID
 	insertion.TransactionType = "Insertion"
 	insertion.Time = time.Now()
 	insertion.Status = "Pending"
@@ -61,10 +60,11 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.Transacti
 			EmployeePosition:   loan.EmployeePosition,
 			Quantity:           loan.Quantity,
 			Status:             loan.Status,
+			Notes:              loan.Notes,
+			Image:              loan.Image,
 			Time:               loan.Time,
 			ItemID:             loan.ItemID,
 			Item:               loan.Item,
-			Notes:              loan.Notes,
 			LoanTime:           &loan.LoanTime,
 			ReturnTime:         &loan.ReturnTime,
 		}
@@ -91,6 +91,7 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.Transacti
 			Status:             inquiry.Status,
 			Time:               inquiry.Time,
 			Notes:              inquiry.Notes,
+			Image:              inquiry.Image,
 			ItemID:             inquiry.ItemID,
 			Item:               inquiry.Item,
 		}
@@ -116,6 +117,7 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.Transacti
 			Status:             insertion.Status,
 			Time:               insertion.Time,
 			Notes:              insertion.Notes,
+			Image:              insertion.Image,
 			ItemID:             insertion.ItemID,
 			Item:               &insertion.Item,
 		}
@@ -217,9 +219,10 @@ func (s *TransactionService) UpdateLoanTransaction(id uint, status string) (*mod
 		Quantity:           loan.Quantity,
 		Status:             loan.Status,
 		Time:               loan.Time,
+		Notes:              loan.Notes,
+		Image:              loan.Image,
 		ItemID:             loan.ItemID,
 		Item:               loan.Item,
-		Notes:              loan.Notes,
 		LoanTime:           *loan.LoanTime,
 		ReturnTime:         *loan.ReturnTime,
 	}
@@ -259,6 +262,7 @@ func (s *TransactionService) UpdateInquiryTransaction(id uint, status string) (*
 		Quantity:           inquiry.Quantity,
 		Status:             inquiry.Status,
 		Time:               inquiry.Time,
+		Image:              inquiry.Image,
 		ItemID:             inquiry.ItemID,
 		Item:               inquiry.Item,
 		Notes:              inquiry.Notes,
@@ -294,9 +298,10 @@ func (s *TransactionService) UpdateInsertionTransaction(id uint, status string) 
 		EmployeePosition:   insertion.EmployeePosition,
 		Status:             insertion.Status,
 		Time:               insertion.Time,
+		Notes:              insertion.Notes,
+		Image:              insertion.Image,
 		ItemID:             insertion.ItemID,
 		Item:               insertion.Item,
-		Notes:              insertion.Notes,
 	}
 	if err := s.logRepository.UpdateInsertionTransaction(insertionTransaction); err != nil {
 		return nil, fmt.Errorf("failed to update insertion transaction: %w", err)
@@ -304,7 +309,6 @@ func (s *TransactionService) UpdateInsertionTransaction(id uint, status string) 
 
 	return insertion, nil
 }
-
 
 // func (s *TransactionService) UpdateTransaction(payload model.UpdateTransactionRequest) (*model.LoanTransaction, error) {
 // 	parts := strings.Split(payload.TransactionID, "_")
