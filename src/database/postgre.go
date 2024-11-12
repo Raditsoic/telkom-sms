@@ -30,6 +30,14 @@ func Connect() (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to connect database: %w", err)
 	}
 
+	db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`)
+
+	db.Exec(`
+    UPDATE loan_transactions SET uuid = uuid_generate_v4() WHERE uuid IS NULL;
+    UPDATE inquiry_transactions SET uuid = uuid_generate_v4() WHERE uuid IS NULL;
+    UPDATE insertion_transactions SET uuid = uuid_generate_v4() WHERE uuid IS NULL;
+	`)
+
 	if err := db.AutoMigrate(
 		&model.Admin{},
 		&model.Storage{},
@@ -37,7 +45,6 @@ func Connect() (*gorm.DB, error) {
 		&model.Category{},
 		&model.LoanTransaction{},
 		&model.InquiryTransaction{},
-		&model.Transaction{},
 		&model.InsertionTransaction{},
 	); err != nil {
 		log.Fatalf("Could not migrate: %v", err)

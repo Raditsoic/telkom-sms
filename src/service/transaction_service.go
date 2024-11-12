@@ -2,10 +2,13 @@ package service
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/database/repository"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/utils"
 )
 
 type TransactionService struct {
@@ -17,34 +20,8 @@ func NewTransactionService(log repository.TransactionRepository, item repository
 	return &TransactionService{logRepository: log, itemRepository: item}
 }
 
-func (s *TransactionService) CreateInsertionTransaction(insertion *model.InsertionTransaction) (*model.InsertionTransaction, error) {
-	_, err := s.itemRepository.CreateItem(&insertion.Item)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create item: %w", err)
-	}
-
-	insertion.TransactionType = "Insertion"
-	insertion.Time = time.Now()
-	insertion.Status = "Pending"
-
-	if err := s.logRepository.CreateInsertionTransaction(insertion); err != nil {
-		return nil, fmt.Errorf("failed to create insertion transaction: %w", err)
-	}
-
-	return insertion, nil
-}
-
-func (s *TransactionService) GetInsertionTransactionByID(id uint) (*model.InsertionTransaction, error) {
-	insertion, err := s.logRepository.GetInsertionTransactionByID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	return insertion, nil
-}
-
-func (s *TransactionService) GetTransactions(page, limit int) ([]model.Transaction, error) {
-	var transactions []model.Transaction
+func (s *TransactionService) GetTransactions(page, limit int) ([]model.GetAllTransactionsResponse, error) {
+	var transactions []model.GetAllTransactionsResponse
 	offset := (page - 1) * limit
 
 	loanTransactions, err := s.logRepository.GetLoanTransactions(limit, offset)
@@ -52,9 +29,10 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.Transacti
 		return nil, err
 	}
 	for _, loan := range loanTransactions {
-		transaction := model.Transaction{
-			ID:                 loan.ID,
-			TransactionType:    "Loan",
+		customUUID := fmt.Sprintf("%s_%s", "loan", loan.UUID)
+		transaction := model.GetAllTransactionsResponse{
+			UUID:               customUUID,
+			TransactionType:    loan.TransactionType,
 			EmployeeName:       loan.EmployeeName,
 			EmployeeDepartment: loan.EmployeeDepartment,
 			EmployeePosition:   loan.EmployeePosition,
@@ -81,9 +59,10 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.Transacti
 		return nil, err
 	}
 	for _, inquiry := range inquiryTransactions {
-		transaction := model.Transaction{
-			ID:                 inquiry.ID,
-			TransactionType:    "Inquiry",
+		customUUID := fmt.Sprintf("%s_%s", "inquiry", inquiry.UUID)
+		transaction := model.GetAllTransactionsResponse{
+			UUID:               customUUID,
+			TransactionType:    inquiry.TransactionType,
 			EmployeeName:       inquiry.EmployeeName,
 			EmployeeDepartment: inquiry.EmployeeDepartment,
 			EmployeePosition:   inquiry.EmployeePosition,
@@ -108,9 +87,10 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.Transacti
 		return nil, err
 	}
 	for _, insertion := range insertionTransactions {
-		transaction := model.Transaction{
-			ID:                 insertion.ID,
-			TransactionType:    "Insertion",
+		customUUID := fmt.Sprintf("%s_%s", "insert", insertion.UUID)
+		transaction := model.GetAllTransactionsResponse{
+			UUID:               customUUID,
+			TransactionType:    insertion.TransactionType,
 			EmployeeName:       insertion.EmployeeName,
 			EmployeeDepartment: insertion.EmployeeDepartment,
 			EmployeePosition:   insertion.EmployeePosition,
@@ -128,22 +108,23 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.Transacti
 	return transactions, nil
 }
 
-func (s *TransactionService) GetLoanTransactionByID(id uint) (*model.Transaction, error) {
-	loan, err := s.logRepository.GetLoanTransactionByID(id)
+func (s *TransactionService) CreateInsertionTransaction(insertion *model.InsertionTransaction) (*model.InsertionTransaction, error) {
+	_, err := s.itemRepository.CreateItem(&insertion.Item)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create item: %w", err)
 	}
 
-	return loan, nil
-}
+	insertion.UUID = uuid.New()
 
-func (s *TransactionService) GetInquiryTransactionByID(id uint) (*model.Transaction, error) {
-	inquiry, err := s.logRepository.GetInquiryTransactionByID(id)
-	if err != nil {
-		return nil, err
+	insertion.TransactionType = "insert"
+	insertion.Time = time.Now()
+	insertion.Status = "pending"
+
+	if err := s.logRepository.CreateInsertionTransaction(insertion); err != nil {
+		return nil, fmt.Errorf("failed to create insertion transaction: %w", err)
 	}
 
-	return inquiry, nil
+	return insertion, nil
 }
 
 func (s *TransactionService) CreateLoanTransaction(loan model.LoanTransaction) (*model.LoanTransaction, error) {
@@ -152,9 +133,12 @@ func (s *TransactionService) CreateLoanTransaction(loan model.LoanTransaction) (
 		return nil, fmt.Errorf("item not found: %w", err)
 	}
 
+	loan.UUID = uuid.New()
+
+	loan.TransactionType = "loan"
 	loan.LoanTime = time.Now()
 	loan.Time = time.Now()
-	loan.Status = "Pending"
+	loan.Status = "pending"
 
 	if err := s.logRepository.CreateLoanTransaction(loan); err != nil {
 		item.Quantity += loan.Quantity
@@ -170,8 +154,10 @@ func (s *TransactionService) CreateInquiryTransaction(inquiry model.InquiryTrans
 		return nil, fmt.Errorf("item not found: %w", err)
 	}
 
+	inquiry.UUID = uuid.New()
+	inquiry.TransactionType = "inquiry"
 	inquiry.Time = time.Now()
-	inquiry.Status = "Pending"
+	inquiry.Status = "pending"
 
 	if err := s.logRepository.CreateInquiryTransaction(inquiry); err != nil {
 		item.Quantity += inquiry.Quantity
@@ -181,152 +167,118 @@ func (s *TransactionService) CreateInquiryTransaction(inquiry model.InquiryTrans
 	return &inquiry, nil
 }
 
-func (s *TransactionService) UpdateLoanTransaction(id uint, status string) (*model.Transaction, error) {
-	loan, err := s.logRepository.GetLoanTransactionByID(id)
+func (s *TransactionService) UpdateTransactionStatus(status, uuidStr string) (*model.UpdateTransactionResponse, error) {
+	parts := strings.Split(uuidStr, "_")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid UUID format, expected type_UUID but got: %s", uuidStr)
+	}
+
+	transaction_type := parts[0]
+	uuid, err := uuid.Parse(parts[1])
 	if err != nil {
-		return nil, fmt.Errorf("loan transaction not found: %w", err)
+		return nil, fmt.Errorf("invalid UUID: %w", err)
 	}
 
-	if loan.Status == "Returned" {
-		return nil, fmt.Errorf("loan transaction already returned")
-	}
+	status = strings.ToLower(status)
 
-	item := loan.Item
-
-	switch status {
-	case "Returned":
-		item.Quantity += loan.Quantity
-		if err := s.itemRepository.UpdateItem(*item); err != nil {
-			return nil, fmt.Errorf("failed to update item quantity: %w", err)
-		}
-	case "Approved":
-		if item.Quantity < loan.Quantity {
-			return nil, fmt.Errorf("insufficient quantity")
+	if transaction_type == "loan" {
+		loan, err := s.logRepository.GetLoanTransactionByUUID(uuid)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get loan transaction: %w", err)
 		}
 
-		item.Quantity -= loan.Quantity
-		if err := s.itemRepository.UpdateItem(*item); err != nil {
-			return nil, fmt.Errorf("failed to update item quantity: %w", err)
+		if loan.Status == "returned" {
+			return nil, fmt.Errorf("loan transaction already returned")
 		}
-	}
 
-	loan.Status = status
-	loanTransaction := &model.LoanTransaction{
-		ID:                 loan.ID,
-		EmployeeName:       loan.EmployeeName,
-		EmployeeDepartment: loan.EmployeeDepartment,
-		EmployeePosition:   loan.EmployeePosition,
-		Quantity:           loan.Quantity,
-		Status:             loan.Status,
-		Time:               loan.Time,
-		Notes:              loan.Notes,
-		Image:              loan.Image,
-		ItemID:             loan.ItemID,
-		Item:               loan.Item,
-		LoanTime:           *loan.LoanTime,
-		ReturnTime:         *loan.ReturnTime,
-	}
-	if err := s.logRepository.UpdateLoanTransaction(loanTransaction); err != nil {
-		return nil, fmt.Errorf("failed to update loan transaction: %w", err)
-	}
+		item := loan.Item
 
-	return loan, nil
+		switch status {
+		case "returned":
+			item.Quantity += loan.Quantity
+			if err := s.itemRepository.UpdateItem(*item); err != nil {
+				return nil, fmt.Errorf("failed to update item quantity: %w", err)
+			}
+		case "approved":
+			if item.Quantity < loan.Quantity {
+				return nil, fmt.Errorf("insufficient quantity")
+			}
+
+			item.Quantity -= loan.Quantity
+			if err := s.itemRepository.UpdateItem(*item); err != nil {
+				return nil, fmt.Errorf("failed to update item quantity: %w", err)
+			}
+		case "rejected":
+		default:
+			return nil, fmt.Errorf("invalid status")
+		}
+
+		loan.Status = status
+		if err := s.logRepository.UpdateLoanTransaction(loan); err != nil {
+			return nil, fmt.Errorf("failed to update loan transaction: %w", err)
+		}
+
+		return &model.UpdateTransactionResponse{
+			Message: fmt.Sprintf("Loan transaction %s successfully", status),
+		}, nil
+	} else if transaction_type == "inquiry" {
+		inquiry, err := s.logRepository.GetInquiryTransactionByUUID(uuid)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get inquiry transaction: %w", err)
+		}
+
+		item := inquiry.Item
+		switch status {
+		case "approved":
+			if item.Quantity < inquiry.Quantity {
+				return nil, fmt.Errorf("insufficient quantity")
+			}
+	
+			item.Quantity -= inquiry.Quantity
+			if err := s.itemRepository.UpdateItem(*item); err != nil {
+				return nil, fmt.Errorf("failed to update item quantity: %w", err)
+			}
+		case "rejected":
+		default:
+			return nil, fmt.Errorf("invalid status")
+		}
+
+		inquiry.Status = status
+		if err := s.logRepository.UpdateInquiryTransaction(inquiry); err != nil {
+			return nil, fmt.Errorf("failed to update inquiry transaction: %w", err)
+		}
+
+		return &model.UpdateTransactionResponse{
+			Message: fmt.Sprintf("Inquiry transaction %s successfully", status),
+		}, nil
+	} else if transaction_type == "insertion" {
+		insertion, err := s.logRepository.GetInsertionTransactionByUUID(uuid)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get insertion transaction: %w", err)
+		}
+
+		item := insertion.Item
+
+		switch status {
+		case "approved":
+			item.Quantity += insertion.Item.Quantity
+			if err := s.itemRepository.UpdateItem(item); err != nil {
+				return nil, fmt.Errorf("failed to update item quantity: %w", err)
+			}
+		case "rejected":
+		default:
+			return nil, fmt.Errorf("invalid status")
+		}
+
+		insertion.Status = status
+		if err := s.logRepository.UpdateInsertionTransaction(insertion); err != nil {
+			return nil, fmt.Errorf("failed to update insertion transaction: %w", err)
+		}
+
+		return &model.UpdateTransactionResponse{
+			Message: fmt.Sprintf("Insertion transaction %s successfully", status),
+		}, nil
+	} else {
+		return nil, utils.ErrTransactionType
+	}
 }
-
-func (s *TransactionService) UpdateInquiryTransaction(id uint, status string) (*model.Transaction, error) {
-	inquiry, err := s.logRepository.GetInquiryTransactionByID(id)
-	if err != nil {
-		return nil, fmt.Errorf("inquiry transaction not found: %w", err)
-	}
-
-	item := inquiry.Item
-
-	switch status {
-	case "Approved":
-		if item.Quantity < inquiry.Quantity {
-			return nil, fmt.Errorf("insufficient quantity")
-		}
-
-		item.Quantity -= inquiry.Quantity
-		if err := s.itemRepository.UpdateItem(*item); err != nil {
-			return nil, fmt.Errorf("failed to update item quantity: %w", err)
-		}
-	}
-
-	inquiry.Status = status
-	inquiryTransaction := &model.InquiryTransaction{
-		ID:                 inquiry.ID,
-		EmployeeName:       inquiry.EmployeeName,
-		EmployeeDepartment: inquiry.EmployeeDepartment,
-		EmployeePosition:   inquiry.EmployeePosition,
-		Quantity:           inquiry.Quantity,
-		Status:             inquiry.Status,
-		Time:               inquiry.Time,
-		Image:              inquiry.Image,
-		ItemID:             inquiry.ItemID,
-		Item:               inquiry.Item,
-		Notes:              inquiry.Notes,
-	}
-	if err := s.logRepository.UpdateInquiryTransaction(inquiryTransaction); err != nil {
-		return nil, fmt.Errorf("failed to update inquiry transaction: %w", err)
-	}
-
-	return inquiry, nil
-}
-
-func (s *TransactionService) UpdateInsertionTransaction(id uint, status string) (*model.InsertionTransaction, error) {
-	insertion, err := s.logRepository.GetInsertionTransactionByID(id)
-	if err != nil {
-		return nil, fmt.Errorf("insertion transaction not found: %w", err)
-	}
-
-	item := insertion.Item
-
-	switch status {
-	case "Approved":
-		item.Quantity += insertion.Item.Quantity
-		if err := s.itemRepository.UpdateItem(item); err != nil {
-			return nil, fmt.Errorf("failed to update item quantity: %w", err)
-		}
-	}
-
-	insertion.Status = status
-	insertionTransaction := &model.InsertionTransaction{
-		ID:                 insertion.ID,
-		EmployeeName:       insertion.EmployeeName,
-		EmployeeDepartment: insertion.EmployeeDepartment,
-		EmployeePosition:   insertion.EmployeePosition,
-		Status:             insertion.Status,
-		Time:               insertion.Time,
-		Notes:              insertion.Notes,
-		Image:              insertion.Image,
-		ItemID:             insertion.ItemID,
-		Item:               insertion.Item,
-	}
-	if err := s.logRepository.UpdateInsertionTransaction(insertionTransaction); err != nil {
-		return nil, fmt.Errorf("failed to update insertion transaction: %w", err)
-	}
-
-	return insertion, nil
-}
-
-// func (s *TransactionService) UpdateTransaction(payload model.UpdateTransactionRequest) (*model.LoanTransaction, error) {
-// 	parts := strings.Split(payload.TransactionID, "_")
-// 	if len(parts) != 2 {
-// 		return nil, fmt.Errorf("invalid input format")
-// 	}
-
-// 	transType := parts[0]
-// 	id, err := strconv.Atoi(parts[1])
-// 	if err != nil {
-// 		return nil, fmt.Errorf("invalid ID format")
-// 	}
-
-// 	if transType == "loan" {
-// 		return s.logRepository.UpdateLoanTransaction(id, payload.Status)
-// 	} else if transType == "inquiry" {
-// 		return s.logRepository.UpdateInquiryTransaction(id, payload.Status)
-// 	}
-
-// 	return nil, fmt.Errorf("invalid transaction")
-// }

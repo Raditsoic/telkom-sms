@@ -2,6 +2,7 @@ package routes
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -36,66 +37,6 @@ func TransactionRoutes(r *mux.Router, transactionService *service.TransactionSer
 		if err := json.NewEncoder(w).Encode(transactions); err != nil {
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 			return
-		}
-	}).Methods("GET")
-
-	r.HandleFunc("/api/transaction/loan/{id}", func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		id, err := strconv.ParseUint(vars["id"], 10, 32)
-		if err != nil {
-			http.Error(w, "Invalid ID", http.StatusBadRequest)
-			return
-		}
-
-		transaction, err := transactionService.GetLoanTransactionByID(uint(id))
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(transaction); err != nil {
-			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		}
-	}).Methods("GET")
-
-	r.HandleFunc("/api/transaction/inquiry/{id}", func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		id, err := strconv.ParseUint(vars["id"], 10, 32)
-		if err != nil {
-			http.Error(w, "Invalid ID", http.StatusBadRequest)
-			return
-		}
-
-		transaction, err := transactionService.GetInquiryTransactionByID(uint(id))
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(transaction); err != nil {
-			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		}
-	}).Methods("GET")
-
-	r.HandleFunc("/api/transaction/insert/{id}", func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		id, err := strconv.ParseUint(vars["id"], 10, 32)
-		if err != nil {
-			http.Error(w, "Invalid ID", http.StatusBadRequest)
-			return
-		}
-
-		transaction, err := transactionService.GetInsertionTransactionByID(uint(id))
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(transaction); err != nil {
-			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		}
 	}).Methods("GET")
 
@@ -330,88 +271,24 @@ func TransactionRoutes(r *mux.Router, transactionService *service.TransactionSer
 		}
 	}).Methods("POST")
 
-	r.Handle("/api/transaction/loan/{id}/{status}", middleware.AuthMiddleware(jwtUtils, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		id, err := strconv.ParseUint(vars["id"], 10, 32)
+	r.Handle("/api/transaction/{uuid}/{status}", middleware.AuthMiddleware(jwtUtils, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		uuid := mux.Vars(r)["uuid"]
+		status := mux.Vars(r)["status"]
+		transaction, err := transactionService.UpdateTransactionStatus(status, uuid)
 		if err != nil {
-			http.Error(w, "Invalid ID", http.StatusBadRequest)
-			return
-		}
-
-		status := vars["status"]
-		if status != "Approved" && status != "Rejected" {
-			http.Error(w, "Invalid status", http.StatusBadRequest)
-			return
-		}
-
-		transaction, err := transactionService.UpdateLoanTransaction(uint(id), status)
-		if err != nil {
+			if errors.Is(err, utils.ErrTransactionType) {
+				http.Error(w, "Invalid transaction type", http.StatusBadRequest)
+				return
+			}
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
 		if err := json.NewEncoder(w).Encode(transaction); err != nil {
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 			return
 		}
-	}))).Methods("PUT")
-
-	r.Handle("/api/transaction/inquiry/{id}/{status}", middleware.AuthMiddleware(jwtUtils, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		id, err := strconv.ParseUint(vars["id"], 10, 32)
-		if err != nil {
-			http.Error(w, "Invalid ID", http.StatusBadRequest)
-			return
-		}
-
-		status := vars["status"]
-		if status != "Approved" && status != "Rejected" {
-			http.Error(w, "Invalid status", http.StatusBadRequest)
-			return
-		}
-
-		transaction, err := transactionService.UpdateInquiryTransaction(uint(id), status)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(transaction); err != nil {
-			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-			return
-		}
-	}))).Methods("PUT")
-
-	r.Handle("/api/transaction/insert/{id}/{status}", middleware.AuthMiddleware(jwtUtils, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		id, err := strconv.ParseUint(vars["id"], 10, 32)
-		if err != nil {
-			http.Error(w, "Invalid ID", http.StatusBadRequest)
-			return
-		}
-
-		status := vars["status"]
-		if status != "Approved" && status != "Rejected" {
-			http.Error(w, "Invalid status", http.StatusBadRequest)
-			return
-		}
-
-		transaction, err := transactionService.UpdateInsertionTransaction(uint(id), status)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(transaction); err != nil {
-			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-			return
-		}
-	}))).Methods("PUT")
+	}))).Methods("PATCH")
 
 }
