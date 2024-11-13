@@ -38,7 +38,7 @@ func main() {
 
 	r := mux.NewRouter()
 
-	// Root route
+	// Root Routes
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if _, err := w.Write([]byte("Hello, World!")); err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -48,10 +48,10 @@ func main() {
 
 	// App Routes
 	routes.AdminRoutes(r, AuthService, jwtUtils)
-	routes.CategoryRoutes(r, categoryService)
-	routes.StorageRoutes(r, StorageService)
-	routes.ItemRoutes(r, itemService)
-	routes.TransactionRoutes(r, TransactionService)
+	routes.CategoryRoutes(r, categoryService, jwtUtils)
+	routes.StorageRoutes(r, StorageService, jwtUtils)
+	routes.ItemRoutes(r, itemService, jwtUtils)
+	routes.TransactionRoutes(r, TransactionService, jwtUtils)
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000"},

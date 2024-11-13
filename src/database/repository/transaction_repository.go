@@ -3,6 +3,7 @@ package repository
 import (
 	"fmt"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
 )
@@ -13,58 +14,6 @@ type TransactionRepository struct {
 
 func NewTransactionRepository(db *gorm.DB) *TransactionRepository {
 	return &TransactionRepository{db: db}
-}
-
-func (repository *TransactionRepository) GetLoanTransactionByID(id uint) (*model.Transaction, error) {
-	var transaction model.Transaction
-	var loan model.LoanTransaction
-
-	// Retrieve loan transaction with the associated item
-	if err := repository.db.Preload("Item").Where("id = ?", id).First(&loan).Error; err != nil {
-		return nil, gorm.ErrRecordNotFound
-	}
-
-	// Map LoanTransaction to Transaction
-	transaction = model.Transaction{
-		ID:                 loan.ID,
-		TransactionType:    "loan",
-		EmployeeName:       loan.EmployeeName,
-		EmployeeDepartment: loan.EmployeeDepartment,
-		EmployeePosition:   loan.EmployeePosition,
-		Quantity:           loan.Quantity,
-		Status:             loan.Status,
-		Time:               loan.Time,
-		ItemID:             loan.ItemID,
-		Item:               loan.Item,
-		LoanTime:           &loan.LoanTime,
-		ReturnTime:         &loan.ReturnTime,
-	}
-
-	return &transaction, nil
-}
-
-func (repository *TransactionRepository) GetInquiryTransactionByID(id uint) (*model.Transaction, error) {
-	var transaction model.Transaction
-
-	var inquiry model.InquiryTransaction
-	if err := repository.db.Preload("Item").Where("id = ?", id).First(&inquiry).Error; err == nil {
-		transaction = model.Transaction{
-			ID:                 inquiry.ID,
-			TransactionType:    "inquiry",
-			EmployeeName:       inquiry.EmployeeName,
-			EmployeeDepartment: inquiry.EmployeeDepartment,
-			EmployeePosition:   inquiry.EmployeePosition,
-			Quantity:           inquiry.Quantity,
-			Status:             inquiry.Status,
-			Time:               inquiry.Time,
-			ItemID:             inquiry.ItemID,
-			Item:               inquiry.Item,
-		}
-
-		return &transaction, nil
-	}
-
-	return &transaction, gorm.ErrRecordNotFound
 }
 
 func (repository *TransactionRepository) CreateLoanTransaction(loan model.LoanTransaction) error {
@@ -118,15 +67,6 @@ func (repository *TransactionRepository) GetInsertionTransactions(limit, offset 
 	return insertTransactions, nil
 }
 
-func (repository *TransactionRepository) GetInsertionTransactionByID(id uint) (*model.InsertionTransaction, error) {
-	var insert model.InsertionTransaction
-	if err := repository.db.Preload("Item").Where("id = ?", id).First(&insert).Error; err != nil {
-		return nil, fmt.Errorf("failed to get insertion transaction: %w", err)
-	}
-
-	return &insert, nil
-}
-
 func (repository *TransactionRepository) UpdateLoanTransaction(loan *model.LoanTransaction) error {
 	if err := repository.db.Save(loan).Error; err != nil {
 		return fmt.Errorf("failed to update loan transaction: %w", err)
@@ -148,46 +88,29 @@ func (repository *TransactionRepository) UpdateInsertionTransaction(insert *mode
 	return nil
 }
 
+func (repository *TransactionRepository) GetInsertionTransactionByUUID(uuid uuid.UUID) (*model.InsertionTransaction, error) {
+	var insert model.InsertionTransaction
+	if err := repository.db.Preload("Item").Where("uuid = ?", uuid).First(&insert).Error; err != nil {
+		return nil, fmt.Errorf("failed to get insertion transaction: %w", err)
+	}
 
+	return &insert, nil
+}
 
-// func (repository *TransactionRepository) GetTransactionByID(id int) (*model.Transaction, error) {
-// 	var transaction model.Transaction
+func (repository *TransactionRepository) GetLoanTransactionByUUID(uuid uuid.UUID) (*model.LoanTransaction, error) {
+	var loan model.LoanTransaction
+	if err := repository.db.Preload("Item").Where("uuid = ?", uuid).First(&loan).Error; err != nil {
+		return nil, fmt.Errorf("failed to get loan transaction: %w", err)
+	}
 
-// 	var loan model.LoanTransaction
-// 	if err := repository.db.Preload("Item").Where("id = ?", id).First(&loan).Error; err == nil {
-// 		transaction = model.Transaction{
-// 			ID:                 loan.ID,
-// 			TransactionType:    "loan",
-// 			EmployeeName:       loan.EmployeeName,
-// 			EmployeeDepartment: loan.EmployeeDepartment,
-// 			EmployeePosition:   loan.EmployeePosition,
-// 			Quantity:           loan.Quantity,
-// 			Status:             loan.Status,
-// 			Time:               loan.Time,
-// 			ItemID:             loan.ItemID,
-// 			Item:               loan.Item,
-// 			LoanTime:           &loan.LoanTime,
-// 			ReturnTime:         &loan.ReturnTime,
-// 		}
-// 		return &transaction, nil
-// 	}
+	return &loan, nil
+}
 
-// 	var inquiry model.InquiryTransaction
-// 	if err := repository.db.Preload("Item").Where("id = ?", id).First(&inquiry).Error; err == nil {
-// 		transaction = model.Transaction{
-// 			ID:                 inquiry.ID,
-// 			TransactionType:    "inquiry",
-// 			EmployeeName:       inquiry.EmployeeName,
-// 			EmployeeDepartment: inquiry.EmployeeDepartment,
-// 			EmployeePosition:   inquiry.EmployeePosition,
-// 			Quantity:           inquiry.Quantity,
-// 			Status:             inquiry.Status,
-// 			Time:               inquiry.Time,
-// 			ItemID:             inquiry.ItemID,
-// 			Item:               inquiry.Item,
-// 		}
-// 		return &transaction, nil
-// 	}
+func (repository *TransactionRepository) GetInquiryTransactionByUUID(uuid uuid.UUID) (*model.InquiryTransaction, error) {
+	var inquiry model.InquiryTransaction
+	if err := repository.db.Preload("Item").Where("uuid = ?", uuid).First(&inquiry).Error; err != nil {
+		return nil, fmt.Errorf("failed to get inquiry transaction: %w", err)
+	}
 
-// 	return nil, gorm.ErrRecordNotFound
-// }
+	return &inquiry, nil
+}

@@ -7,30 +7,31 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/middleware"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/service"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/utils"
 )
 
-func CategoryRoutes(r *mux.Router, categoryService *service.CategoryService) {
+func CategoryRoutes(r *mux.Router, categoryService *service.CategoryService, jwtUtils *utils.JWTUtils) {
 	r.HandleFunc("/api/categories", func(w http.ResponseWriter, r *http.Request) {
 		page := r.URL.Query().Get("page")
 		limit := r.URL.Query().Get("limit")
 
-		categories, err := categoryService.GetCategories(page, limit)
+		response, err := categoryService.GetCategories(page, limit)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(categories); err != nil {
+		if err := json.NewEncoder(w).Encode(response); err != nil {
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 			return
 		}
 	}).Methods("GET")
-	r.HandleFunc("/api/category", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 
+	r.Handle("/api/category", middleware.AuthMiddleware(jwtUtils, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseMultipartForm(10 << 20); err != nil {
 			http.Error(w, "Unable to parse form", http.StatusBadRequest)
 			return
@@ -69,33 +70,36 @@ func CategoryRoutes(r *mux.Router, categoryService *service.CategoryService) {
 			Image:     imageData,
 		}
 
-		createdCategory, err := categoryService.CreateCategory(&category)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.WriteHeader(http.StatusCreated)
-		if err := json.NewEncoder(w).Encode(createdCategory); err != nil {
-			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-			return
-		}
-	}).Methods("POST")
-	r.HandleFunc("/api/category/{id}", func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		id := vars["id"]
-
-		category, err := categoryService.GetCategoryByID(id)
+		response, err := categoryService.CreateCategory(&category)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(category); err != nil {
+		w.WriteHeader(http.StatusCreated)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			return
+		}
+	}))).Methods("POST")
+
+	r.HandleFunc("/api/category/{id}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["id"]
+
+		response, err := categoryService.GetCategoryByID(id)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(response); err != nil {
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		}
 	}).Methods("GET")
+
 	r.HandleFunc("/api/category/{id}/items", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		idStr := vars["id"]
@@ -106,18 +110,19 @@ func CategoryRoutes(r *mux.Router, categoryService *service.CategoryService) {
 			return
 		}
 
-		category, err := categoryService.GetCategoryWithItems(uint(categoryID))
+		response, err := categoryService.GetCategoryWithItems(uint(categoryID))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(category); err != nil {
+		if err := json.NewEncoder(w).Encode(response); err != nil {
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		}
 	}).Methods("GET")
-	r.HandleFunc("/api/category/{id}", func(w http.ResponseWriter, r *http.Request) {
+
+	r.Handle("/api/category/{id}", middleware.AuthMiddleware(jwtUtils, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["id"]
 
@@ -136,5 +141,5 @@ func CategoryRoutes(r *mux.Router, categoryService *service.CategoryService) {
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 			return
 		}
-	}).Methods("DELETE")
+	}))).Methods("DELETE")
 }
