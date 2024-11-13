@@ -17,7 +17,6 @@ type LoanTransaction struct {
 	Status             string    `json:"status"`
 	Time               time.Time `json:"time"`
 	Notes              string    `json:"notes"`
-	Image              []byte    `json:"image"`
 	ItemID             uint      `json:"item_id"`
 	Item               *Item     `gorm:"foreignKey:ItemID" json:"item"`
 	LoanTime           time.Time `json:"loan_time"`
@@ -34,7 +33,6 @@ type InquiryTransaction struct {
 	Quantity           int       `json:"quantity"`
 	Status             string    `json:"status"`
 	Notes              string    `json:"notes"`
-	Image              []byte    `json:"image"`
 	Time               time.Time `json:"time"`
 	ItemID             uint      `json:"item_id"`
 	Item               *Item     `gorm:"foreignKey:ItemID" json:"item"`

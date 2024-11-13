@@ -39,7 +39,6 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.GetAllTra
 			Quantity:           loan.Quantity,
 			Status:             loan.Status,
 			Notes:              loan.Notes,
-			Image:              loan.Image,
 			Time:               loan.Time,
 			ItemID:             loan.ItemID,
 			Item:               loan.Item,
@@ -70,7 +69,6 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.GetAllTra
 			Status:             inquiry.Status,
 			Time:               inquiry.Time,
 			Notes:              inquiry.Notes,
-			Image:              inquiry.Image,
 			ItemID:             inquiry.ItemID,
 			Item:               inquiry.Item,
 		}
@@ -233,7 +231,7 @@ func (s *TransactionService) UpdateTransactionStatus(status, uuidStr string) (*m
 			if item.Quantity < inquiry.Quantity {
 				return nil, fmt.Errorf("insufficient quantity")
 			}
-	
+
 			item.Quantity -= inquiry.Quantity
 			if err := s.itemRepository.UpdateItem(*item); err != nil {
 				return nil, fmt.Errorf("failed to update item quantity: %w", err)

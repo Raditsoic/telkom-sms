@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gorilla/mux"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/middleware"
@@ -41,74 +40,10 @@ func TransactionRoutes(r *mux.Router, transactionService *service.TransactionSer
 	}).Methods("GET")
 
 	r.HandleFunc("/api/transaction/loan", func(w http.ResponseWriter, r *http.Request) {
-		if err := r.ParseMultipartForm(10 << 20); err != nil {
-			http.Error(w, "Unable to parse form", http.StatusBadRequest)
+		var req model.LoanTransaction
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
 			return
-		}
-
-		requiredFields := map[string]string{
-			"employee_name":       r.FormValue("employee_name"),
-			"employee_department": r.FormValue("employee_department"),
-			"employee_position":   r.FormValue("employee_position"),
-			"notes":               r.FormValue("notes"),
-			"item_id":             r.FormValue("item_id"),
-			"quantity":            r.FormValue("quantity"),
-			"return_time":         r.FormValue("return_time"),
-		}
-
-		for field, value := range requiredFields {
-			if value == "" {
-				http.Error(w, fmt.Sprintf("Field '%s' is required", field), http.StatusBadRequest)
-				return
-			}
-		}
-
-		item_id, err := strconv.ParseUint(r.FormValue("item_id"), 10, 32)
-		if err != nil {
-			http.Error(w, "Invalid item ID", http.StatusBadRequest)
-			return
-		}
-
-		quantity, err := strconv.Atoi(r.FormValue("quantity"))
-		if err != nil {
-			http.Error(w, "Invalid quantity", http.StatusBadRequest)
-			return
-		}
-
-		file, _, err := r.FormFile("image")
-		if err != nil {
-			http.Error(w, "Image file is required", http.StatusBadRequest)
-		}
-		defer file.Close()
-
-		imageData, err := io.ReadAll(file)
-		if err != nil {
-			http.Error(w, "Could not read image file", http.StatusInternalServerError)
-			return
-		}
-
-		returnTime, err := time.Parse(time.RFC3339, r.FormValue("return_time"))
-		if err != nil {
-			http.Error(w, "Invalid return time format. Expected RFC3339 format: "+err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		now := time.Now()
-		if returnTime.Before(now) {
-			http.Error(w, "Return time must be after loan time", http.StatusBadRequest)
-			return
-		}
-
-		req := model.LoanTransaction{
-			EmployeeName:       r.FormValue("employee_name"),
-			EmployeeDepartment: r.FormValue("employee_department"),
-			EmployeePosition:   r.FormValue("employee_position"),
-			Quantity:           quantity,
-			Notes:              r.FormValue("notes"),
-			LoanTime:           now,
-			ReturnTime:         returnTime,
-			Image:              imageData,
-			ItemID:             uint(item_id),
 		}
 
 		transaction, err := transactionService.CreateLoanTransaction(req)
@@ -126,55 +61,12 @@ func TransactionRoutes(r *mux.Router, transactionService *service.TransactionSer
 	}).Methods("POST")
 
 	r.HandleFunc("/api/transaction/inquiry", func(w http.ResponseWriter, r *http.Request) {
-		if err := r.ParseMultipartForm(10 << 20); err != nil {
-			http.Error(w, "Unable to parse form", http.StatusBadRequest)
+		var req model.InquiryTransaction
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
 			return
 		}
-
-		employee_name := r.FormValue("employee_name")
-		employee_department := r.FormValue("employee_department")
-		employee_position := r.FormValue("employee_position")
-		notes := r.FormValue("notes")
-
-		if employee_name == "" || employee_department == "" || employee_position == "" || notes == "" {
-			http.Error(w, "All fields are required", http.StatusBadRequest)
-			return
-		}
-
-		item_id, err := strconv.ParseUint(r.FormValue("item_id"), 10, 32)
-		if err != nil {
-			http.Error(w, "Invalid item ID", http.StatusBadRequest)
-			return
-		}
-
-		quantity, err := strconv.Atoi(r.FormValue("quantity"))
-		if err != nil {
-			http.Error(w, "Invalid quantity", http.StatusBadRequest)
-			return
-		}
-
-		file, _, err := r.FormFile("image")
-		if err != nil {
-			http.Error(w, "Image file is required", http.StatusBadRequest)
-		}
-		defer file.Close()
-
-		imageData, err := io.ReadAll(file)
-		if err != nil {
-			http.Error(w, "Could not read image file", http.StatusInternalServerError)
-			return
-		}
-
-		req := model.InquiryTransaction{
-			EmployeeName:       employee_name,
-			EmployeeDepartment: employee_department,
-			EmployeePosition:   employee_position,
-			Quantity:           quantity,
-			Notes:              notes,
-			Image:              imageData,
-			ItemID:             uint(item_id),
-		}
-
+		
 		transaction, err := transactionService.CreateInquiryTransaction(req)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
