@@ -54,7 +54,7 @@ func main() {
 	routes.TransactionRoutes(r, TransactionService, jwtUtils)
 
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedOrigins:   []string{"*"},
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 	})
