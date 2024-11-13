@@ -15,12 +15,10 @@ func NewStorageService(repo repository.StorageRepository) *StorageService {
 	return &StorageService{repository: repo}
 }
 
-// GetStorages handles GET requests to retrieve storage items.
 func (service *StorageService) GetStorages() ([]model.Storage, error) {
 	return service.repository.GetStorages()
 }
 
-// CreateStorage handles POST requests to create a new storage item.
 func (service *StorageService) CreateStorage(storageData []byte) (*model.Storage, error) {
 	var storage model.Storage
 	if err := json.Unmarshal(storageData, &storage); err != nil {
@@ -55,7 +53,6 @@ func (service *StorageService) GetStorageByID(id int) (*model.StorageByIDRespons
 		categories = append(categories, model.StorageCategoryResponse{
 			ID:    category.ID,
 			Name:  category.Name,
-			Image: category.Image,
 		})
 	}
 
