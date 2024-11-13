@@ -9,7 +9,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"gtihub.com/raditsoic/telkom-storage-ms/src/middleware"
+	// "gtihub.com/raditsoic/telkom-storage-ms/src/middleware"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/service"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/utils"
@@ -163,7 +163,27 @@ func TransactionRoutes(r *mux.Router, transactionService *service.TransactionSer
 		}
 	}).Methods("POST")
 
-	r.Handle("/api/transaction/{uuid}/{status}", middleware.AuthMiddleware(jwtUtils, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// r.Handle("/api/transaction/{uuid}/{status}", middleware.AuthMiddleware(jwtUtils, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// 	uuid := mux.Vars(r)["uuid"]
+	// 	status := mux.Vars(r)["status"]
+	// 	transaction, err := transactionService.UpdateTransactionStatus(status, uuid)
+	// 	if err != nil {
+	// 		if errors.Is(err, utils.ErrTransactionType) {
+	// 			http.Error(w, "Invalid transaction type", http.StatusBadRequest)
+	// 			return
+	// 		}
+	// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 		return
+	// 	}
+
+	// 	w.Header().Set("Content-Type", "application/json")
+	// 	if err := json.NewEncoder(w).Encode(transaction); err != nil {
+	// 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	// 		return
+	// 	}
+	// }))).Methods("PATCH")
+
+	r.HandleFunc("/api/transaction/{uuid}/{status}", (func(w http.ResponseWriter, r *http.Request) {
 		uuid := mux.Vars(r)["uuid"]
 		status := mux.Vars(r)["status"]
 		transaction, err := transactionService.UpdateTransactionStatus(status, uuid)
@@ -181,6 +201,6 @@ func TransactionRoutes(r *mux.Router, transactionService *service.TransactionSer
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 			return
 		}
-	}))).Methods("PATCH")
+	})).Methods("PATCH")
 
 }
