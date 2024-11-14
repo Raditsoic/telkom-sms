@@ -212,6 +212,10 @@ func TransactionRoutes(r *mux.Router, transactionService *service.TransactionSer
 				http.Error(w, "Invalid transaction type", http.StatusBadRequest)
 				return
 			}
+			if errors.Is(err, utils.ErrTransactionNotFound) {
+				http.Error(w, "Transaction not found", http.StatusNotFound)
+				return
+			}
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -223,4 +227,22 @@ func TransactionRoutes(r *mux.Router, transactionService *service.TransactionSer
 		}
 	})).Methods("PATCH")
 
+	r.HandleFunc("/api/transaction/{uuid}", (func(w http.ResponseWriter, r *http.Request) {
+		uuid := mux.Vars(r)["uuid"]
+		response, err := transactionService.DeleteTransaction(uuid)
+		if err != nil {
+			if errors.Is(err, utils.ErrTransactionNotFound) {
+				http.Error(w, "Transaction not found", http.StatusNotFound)
+				return
+			}
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			return
+		}
+	})).Methods("DELETE")
 }
