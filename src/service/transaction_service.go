@@ -30,8 +30,18 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.GetAllTra
 	if err != nil {
 		return nil, err
 	}
+
+	
 	for _, loan := range loanTransactions {
 		customUUID := fmt.Sprintf("%s_%s", "loan", loan.UUID)
+
+		itemRequest := model.ItemRequestDTO{
+			Name:       loan.Item.Name,
+			Quantity:   loan.Quantity,
+			Shelf:      loan.Item.Shelf,
+			CategoryID: loan.Item.CategoryID,
+		}
+
 		transaction := model.GetAllTransactionsResponse{
 			UUID:               customUUID,
 			TransactionType:    loan.TransactionType,
@@ -42,14 +52,9 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.GetAllTra
 			Status:             loan.Status,
 			Notes:              loan.Notes,
 			Time:               loan.Time,
-			ItemID:             &loan.ItemID,
-			Item:               loan.Item,
 			LoanTime:           &loan.LoanTime,
 			ReturnTime:         &loan.ReturnTime,
-		}
-
-		if loan.Item != nil {
-			transaction.Item = loan.Item
+			ItemRequest:        &itemRequest,
 		}
 
 		transactions = append(transactions, transaction)
@@ -61,6 +66,14 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.GetAllTra
 	}
 	for _, inquiry := range inquiryTransactions {
 		customUUID := fmt.Sprintf("%s_%s", "inquiry", inquiry.UUID)
+
+		itemRequest := model.ItemRequestDTO{
+			Name:       inquiry.Item.Name,
+			Quantity:   inquiry.Quantity,
+			Shelf:      inquiry.Item.Shelf,
+			CategoryID: inquiry.Item.CategoryID,
+		}
+
 		transaction := model.GetAllTransactionsResponse{
 			UUID:               customUUID,
 			TransactionType:    inquiry.TransactionType,
@@ -71,12 +84,7 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.GetAllTra
 			Status:             inquiry.Status,
 			Time:               inquiry.Time,
 			Notes:              inquiry.Notes,
-			ItemID:             &inquiry.ItemID,
-			Item:               inquiry.Item,
-		}
-
-		if inquiry.Item != nil {
-			transaction.Item = inquiry.Item
+			ItemRequest:        &itemRequest,
 		}
 
 		transactions = append(transactions, transaction)
@@ -98,8 +106,6 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.GetAllTra
 			Time:               insertion.Time,
 			Notes:              insertion.Notes,
 			Image:              &insertion.Image,
-			ItemID:             insertion.ItemID,
-			Item:               insertion.Item,
 			ItemRequest:        &insertion.ItemRequest,
 		}
 
