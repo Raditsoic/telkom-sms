@@ -329,6 +329,7 @@ func main() {
 
 	// 2. Create Categories with valid StorageID references
 	categories := []Category{
+		// Storage ID: 0 (ATK)
 		{Name: "Amplop", StorageID: uint(storages[0].ID), Image: images.Amplop},
 		{Name: "Kertas", StorageID: uint(storages[0].ID), Image: images.Kertas},
 		{Name: "Baterai", StorageID: uint(storages[0].ID), Image: images.Baterai},
@@ -356,6 +357,36 @@ func main() {
 		{Name: "Gunting", StorageID: uint(storages[0].ID), Image: images.Gunting},
 		{Name: "Penggaris", StorageID: uint(storages[0].ID), Image: images.Penggaris},
 		{Name: "Plong Kertas", StorageID: uint(storages[0].ID), Image: images.PlongKertas},
+
+		// Storage ID: 1 (Lantai 8)
+		{Name: "Amplop", StorageID: uint(storages[1].ID), Image: images.Amplop},
+		{Name: "Kertas", StorageID: uint(storages[1].ID), Image: images.Kertas},
+		{Name: "Baterai", StorageID: uint(storages[1].ID), Image: images.Baterai},
+		{Name: "Board Marker", StorageID: uint(storages[1].ID), Image: images.BoardMarker},
+		{Name: "Pulpen", StorageID: uint(storages[1].ID), Image: images.PulpenFaster},
+		{Name: "Double Tape", StorageID: uint(storages[1].ID), Image: images.DoubleTape},
+		{Name: "Isolasi", StorageID: uint(storages[1].ID), Image: images.Isolasi},
+		{Name: "Kalkulator Joyko", StorageID: uint(storages[1].ID), Image: images.KalkulatorJoyko},
+		{Name: "Lakban", StorageID: uint(storages[1].ID), Image: images.Lakban},
+		{Name: "Spidol", StorageID: uint(storages[1].ID), Image: images.Spidol},
+		{Name: "Lem", StorageID: uint(storages[1].ID), Image: images.Lem},
+		{Name: "Map", StorageID: uint(storages[1].ID), Image: images.Map},
+		{Name: "Stabilo", StorageID: uint(storages[1].ID), Image: images.Stabilo},
+		{Name: "Staples", StorageID: uint(storages[1].ID), Image: images.Staples},
+		{Name: "Paper Clip", StorageID: uint(storages[1].ID), Image: images.PaperClip},
+		{Name: "Pensil", StorageID: uint(storages[1].ID), Image: images.Pensil},
+		{Name: "Penghapus", StorageID: uint(storages[1].ID), Image: images.Penghapus},
+		{Name: "Plastik", StorageID: uint(storages[1].ID), Image: images.Plastik},
+		{Name: "Materai", StorageID: uint(storages[1].ID), Image: images.Materai},
+		{Name: "Binder Clip", StorageID: uint(storages[1].ID), Image: images.BinderClip},
+		{Name: "Correction Tape", StorageID: uint(storages[1].ID), Image: images.CorrectionTape},
+		{Name: "Board Eraser", StorageID: uint(storages[1].ID), Image: images.BoardEraser},
+		{Name: "Buku", StorageID: uint(storages[1].ID), Image: images.Buku},
+		{Name: "Cutter", StorageID: uint(storages[1].ID), Image: images.Cutter},
+		{Name: "Gunting", StorageID: uint(storages[1].ID), Image: images.Gunting},
+		{Name: "Penggaris", StorageID: uint(storages[1].ID), Image: images.Penggaris},
+		{Name: "Plong Kertas", StorageID: uint(storages[1].ID), Image: images.PlongKertas},
+
 	}
 
 	fmt.Println("Creating categories...")
