@@ -42,6 +42,12 @@ type CategoryWithItemsResponse struct {
 type StorageCategoryResponse struct {
 	ID       uint   `json:"id"`
 	Name     string `json:"name"`
+	Image    []byte `json:"image"`
+}
+
+type StorageCategoryNoImageResponse struct {
+	ID       uint   `json:"id"`
+	Name     string `json:"name"`
 }
 
 /*

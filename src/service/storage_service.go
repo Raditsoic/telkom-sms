@@ -53,10 +53,34 @@ func (service *StorageService) GetStorageByID(id int) (*model.StorageByIDRespons
 		categories = append(categories, model.StorageCategoryResponse{
 			ID:    category.ID,
 			Name:  category.Name,
+			Image: category.Image,
 		})
 	}
 
 	return &model.StorageByIDResponse{
+		ID:         storage.ID,
+		Name:       storage.Name,
+		Location:   storage.Location,
+		Categories: categories,
+	}, nil
+}
+
+func (service *StorageService) GetStorageByIDNoImage(id int) (*model.StorageByIDResponseNoImage, error) {
+
+	storage, err := service.repository.GetStorageByIDwithCategories(id)
+	if err != nil {
+		return nil, err
+	}
+
+	var categories []model.StorageCategoryNoImageResponse
+	for _, category := range storage.Categories {
+		categories = append(categories, model.StorageCategoryNoImageResponse{
+			ID:   category.ID,
+			Name: category.Name,
+		})
+	}
+
+	return &model.StorageByIDResponseNoImage{
 		ID:         storage.ID,
 		Name:       storage.Name,
 		Location:   storage.Location,

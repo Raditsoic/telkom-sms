@@ -14,6 +14,13 @@ type StorageByIDResponse struct {
 	Categories []StorageCategoryResponse `json:"categories"`
 }
 
+type StorageByIDResponseNoImage struct {
+	ID         int                            `json:"id"`
+	Name       string                         `json:"name"`
+	Location   string                         `json:"location"`
+	Categories []StorageCategoryNoImageResponse `json:"categories"`
+}
+
 /*
  	"name":"ATK",
 	"location":"TSO Manyar"
