@@ -63,3 +63,12 @@ func (repo *ItemRepository) AddItem(item *model.Item) error {
 
 	return nil
 }
+
+func (repo *ItemRepository) GetItemByName(name string) (*model.Item, error) {
+	var item model.Item
+	if err := repo.db.Where("name = ?", name).First(&item).Error; err != nil {
+		return nil, fmt.Errorf("failed to get item: %w", err)
+	}
+
+	return &item, nil
+}

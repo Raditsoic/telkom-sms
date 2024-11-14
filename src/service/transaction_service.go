@@ -1,11 +1,13 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/database/repository"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/utils"
@@ -96,8 +98,8 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.GetAllTra
 			Time:               insertion.Time,
 			Notes:              insertion.Notes,
 			Image:              insertion.Image,
-			ItemID:             insertion.ItemID,
-			Item:               &insertion.Item,
+			ItemID:             *insertion.ItemID,
+			Item:               insertion.Item,
 		}
 
 		transactions = append(transactions, transaction)
@@ -106,23 +108,31 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.GetAllTra
 	return transactions, nil
 }
 
-func (s *TransactionService) CreateInsertionTransaction(insertion *model.InsertionTransaction) (*model.InsertionTransaction, error) {
-	_, err := s.itemRepository.CreateItem(&insertion.Item)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create item: %w", err)
+func (s *TransactionService) CreateInsertionTransaction(dto *model.CreateInsertionTransactionDTO) (*model.InsertionTransaction, error) {
+	if dto == nil {
+		return nil, fmt.Errorf("dto cannot be nil")
 	}
 
-	insertion.UUID = uuid.New()
+	transaction := &model.InsertionTransaction{
+		UUID:               uuid.New(),
+		TransactionType:    "insert",
+		EmployeeName:       dto.EmployeeName,
+		EmployeeDepartment: dto.EmployeeDepartment,
+		EmployeePosition:   dto.EmployeePosition,
+		Notes:              dto.Notes,
+		Time:               time.Now(),
+		Status:             "pending",
+		Image:              dto.Image,
+		ItemRequest:        dto.ItemRequest,
+		ItemID:             nil, // Explicitly set to nil
+		Item:               nil, // Explicitly set to nil
+	}
 
-	insertion.TransactionType = "insert"
-	insertion.Time = time.Now()
-	insertion.Status = "pending"
-
-	if err := s.logRepository.CreateInsertionTransaction(insertion); err != nil {
+	if err := s.logRepository.CreateInsertionTransaction(transaction); err != nil {
 		return nil, fmt.Errorf("failed to create insertion transaction: %w", err)
 	}
 
-	return insertion, nil
+	return transaction, nil
 }
 
 func (s *TransactionService) CreateLoanTransaction(loan model.LoanTransaction) (*model.LoanTransaction, error) {
@@ -226,6 +236,7 @@ func (s *TransactionService) UpdateTransactionStatus(status, uuidStr string) (*m
 		}
 
 		item := inquiry.Item
+
 		switch status {
 		case "approved":
 			if item.Quantity < inquiry.Quantity {
@@ -249,20 +260,54 @@ func (s *TransactionService) UpdateTransactionStatus(status, uuidStr string) (*m
 		return &model.UpdateTransactionResponse{
 			Message: fmt.Sprintf("Inquiry transaction %s successfully", status),
 		}, nil
-	} else if transaction_type == "insertion" {
+	} else if transaction_type == "insert" {
 		insertion, err := s.logRepository.GetInsertionTransactionByUUID(uuid)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get insertion transaction: %w", err)
 		}
 
-		item := insertion.Item
+		if insertion.Status != "pending" {
+			return nil, fmt.Errorf("transaction has already been %s", insertion.Status)
+		}
 
 		switch status {
 		case "approved":
-			item.Quantity += insertion.Item.Quantity
-			if err := s.itemRepository.UpdateItem(item); err != nil {
-				return nil, fmt.Errorf("failed to update item quantity: %w", err)
+			existingItem, err := s.itemRepository.GetItemByName(insertion.ItemRequest.Name)
+			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, fmt.Errorf("failed to check existing item: %w", err)
 			}
+
+			var item *model.Item
+			if existingItem != nil {
+				existingItem.Quantity += insertion.ItemRequest.Quantity
+				existingItem.Shelf = insertion.ItemRequest.Shelf
+				existingItem.CategoryID = insertion.ItemRequest.CategoryID
+
+				if err := s.itemRepository.UpdateItem(*existingItem); err != nil {
+					return nil, fmt.Errorf("failed to update existing item: %w", err)
+				}
+				item = existingItem
+			} else {
+				// Create new item from the request data
+				newItem := &model.Item{
+					Name:       insertion.ItemRequest.Name,
+					Quantity:   insertion.ItemRequest.Quantity,
+					Shelf:      insertion.ItemRequest.Shelf,
+					CategoryID: insertion.ItemRequest.CategoryID,
+				}
+
+				createdItem, err := s.itemRepository.CreateItem(newItem)
+				if err != nil {
+					return nil, fmt.Errorf("failed to create new item: %w", err)
+				}
+				item = createdItem
+			}
+
+			// Update the insertion transaction with the item ID
+			itemID := item.ID
+			insertion.ItemID = &itemID
+			insertion.Item = item
+
 		case "rejected":
 		default:
 			return nil, fmt.Errorf("invalid status")
