@@ -45,6 +45,11 @@ type StorageCategoryResponse struct {
 	Image    []byte `json:"image"`
 }
 
+type StorageCategoryNoImageResponse struct {
+	ID       uint   `json:"id"`
+	Name     string `json:"name"`
+}
+
 /*
 {
     "name":"Pulpen",

@@ -95,4 +95,26 @@ func StorageRoutes(r *mux.Router, storageService *service.StorageService, jwtUti
 			return
 		}
 	}).Methods("GET")
+
+	r.HandleFunc("/api/storage/{id}/no-image", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["id"]
+		idInt, err := strconv.Atoi(id)
+		if err != nil {
+			http.Error(w, "Invalid storage ID", http.StatusBadRequest)
+			return
+		}
+
+		storage, err := storageService.GetStorageByIDNoImage(idInt)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(storage); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			return
+		}
+	}).Methods("GET")
 }
