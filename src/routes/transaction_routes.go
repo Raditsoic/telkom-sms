@@ -142,7 +142,7 @@ func TransactionRoutes(r *mux.Router, transactionService *service.TransactionSer
 			}
 		}()
 
-		if fileHeader.Size > 10<<20 { 
+		if fileHeader.Size > 10<<20 {
 			http.Error(w, "File size too large", http.StatusBadRequest)
 			return
 		}
@@ -153,20 +153,18 @@ func TransactionRoutes(r *mux.Router, transactionService *service.TransactionSer
 			return
 		}
 
-		item := model.Item{
-			Name:       r.FormValue("item_name"),
-			Quantity:   quantity,
-			Shelf:      r.FormValue("shelf"),
-			CategoryID: uint(categoryID),
-		}
-
-		req := model.InsertionTransaction{
+		req := model.CreateInsertionTransactionDTO{
 			EmployeeName:       r.FormValue("employee_name"),
 			EmployeeDepartment: r.FormValue("employee_department"),
 			EmployeePosition:   r.FormValue("employee_position"),
 			Notes:              r.FormValue("notes"),
 			Image:              imageData,
-			Item:               item,
+			ItemRequest: model.ItemRequestDTO{
+				Name:     r.FormValue("item_name"),
+				Quantity: quantity,
+				Shelf:    r.FormValue("shelf"),
+				CategoryID: uint(categoryID),
+			},
 		}
 
 		transaction, err := transactionService.CreateInsertionTransaction(&req)
