@@ -114,3 +114,30 @@ func (repository *TransactionRepository) GetInquiryTransactionByUUID(uuid uuid.U
 
 	return &inquiry, nil
 }
+
+func (repository *TransactionRepository) DeleteLoanTransactionByUUID(uuid uuid.UUID) error {
+	if err := repository.db.Where("uuid = ?", uuid).Delete(&model.LoanTransaction{}).Error; err != nil {
+		return fmt.Errorf("failed to delete loan transaction: %w", err)
+	}
+
+	return nil
+}
+
+func (repository *TransactionRepository) DeleteInquiryTransactionByUUID(uuid uuid.UUID) error {
+	if err := repository.db.Where("uuid = ?", uuid).Delete(&model.InquiryTransaction{}).Error; err != nil {
+		return fmt.Errorf("failed to delete inquiry transaction: %w", err)
+	}
+
+	return nil
+}
+
+func (repository *TransactionRepository) DeleteInsertionTransactionByUUID(uuid uuid.UUID) error {
+	if err := repository.db.Where("uuid = ?", uuid).Delete(&model.InsertionTransaction{}).Error; err != nil {
+		return fmt.Errorf("failed to delete insertion transaction: %w", err)
+	}
+
+	return nil
+}
+
+
+

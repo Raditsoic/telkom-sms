@@ -42,7 +42,7 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.GetAllTra
 			Status:             loan.Status,
 			Notes:              loan.Notes,
 			Time:               loan.Time,
-			ItemID:             loan.ItemID,
+			ItemID:             &loan.ItemID,
 			Item:               loan.Item,
 			LoanTime:           &loan.LoanTime,
 			ReturnTime:         &loan.ReturnTime,
@@ -71,7 +71,7 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.GetAllTra
 			Status:             inquiry.Status,
 			Time:               inquiry.Time,
 			Notes:              inquiry.Notes,
-			ItemID:             inquiry.ItemID,
+			ItemID:             &inquiry.ItemID,
 			Item:               inquiry.Item,
 		}
 
@@ -97,8 +97,8 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.GetAllTra
 			Status:             insertion.Status,
 			Time:               insertion.Time,
 			Notes:              insertion.Notes,
-			Image:              insertion.Image,
-			ItemID:             *insertion.ItemID,
+			Image:              &insertion.Image,
+			ItemID:             insertion.ItemID,
 			Item:               insertion.Item,
 		}
 
@@ -334,5 +334,59 @@ func (s *TransactionService) updateInsertionTransaction(uuid uuid.UUID, status s
 
 	return &model.UpdateTransactionResponse{
 		Message: fmt.Sprintf("Insertion transaction %s successfully", status),
+	}, nil
+}
+
+func (s *TransactionService) DeleteTransaction(uuidStr string) (*model.DeleteTransactionResponse, error) {
+	parts := strings.Split(uuidStr, "_")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid UUID format, expected type_UUID but got: %s", uuidStr)
+	}
+
+	transactionType := parts[0]
+	uuid, err := uuid.Parse(parts[1])
+	if err != nil {
+		return nil, fmt.Errorf("invalid UUID: %w", err)
+	}
+
+	switch transactionType {
+	case "loan":
+		return s.deleteLoanTransaction(uuid)
+	case "inquiry":
+		return s.deleteInquiryTransaction(uuid)
+	case "insert":
+		return s.deleteInsertionTransaction(uuid)
+	default:
+		return nil, utils.ErrTransactionType
+	}
+}
+
+func (s *TransactionService) deleteLoanTransaction(uuid uuid.UUID) (*model.DeleteTransactionResponse, error) {
+	if err := s.logRepository.DeleteLoanTransactionByUUID(uuid); err != nil {
+		return nil, fmt.Errorf("failed to delete loan transaction: %w", err)
+	}
+
+	return &model.DeleteTransactionResponse{
+		Message: "Loan transaction deleted successfully",
+	}, nil
+}
+
+func (s *TransactionService) deleteInquiryTransaction(uuid uuid.UUID) (*model.DeleteTransactionResponse, error) {
+	if err := s.logRepository.DeleteInquiryTransactionByUUID(uuid); err != nil {
+		return nil, fmt.Errorf("failed to delete inquiry transaction: %w", err)
+	}
+
+	return &model.DeleteTransactionResponse{
+		Message: "Inquiry transaction deleted successfully",
+	}, nil
+}
+
+func (s *TransactionService) deleteInsertionTransaction(uuid uuid.UUID) (*model.DeleteTransactionResponse, error) {
+	if err := s.logRepository.DeleteInsertionTransactionByUUID(uuid); err != nil {
+		return nil, fmt.Errorf("failed to delete insertion transaction: %w", err)
+	}
+
+	return &model.DeleteTransactionResponse{
+		Message: "Insertion transaction deleted successfully",
 	}, nil
 }

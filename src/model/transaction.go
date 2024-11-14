@@ -92,13 +92,17 @@ type GetAllTransactionsResponse struct {
 	Status             string     `json:"status"`
 	Notes              string     `json:"notes"`
 	Time               time.Time  `json:"time"`
-	Image              []byte     `json:"image"`
-	ItemID             uint       `json:"item_id"`
+	Image              *[]byte     `json:"image"`
+	ItemID             *uint       `json:"item_id"`
 	Item               *Item      `json:"item" gorm:"foreignKey:ItemID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	LoanTime           *time.Time `json:"loan_time,omitempty"`
 	ReturnTime         *time.Time `json:"return_time,omitempty"`
 }
 
 type UpdateTransactionResponse struct {
+	Message string `json:"message"`
+}
+
+type DeleteTransactionResponse struct {
 	Message string `json:"message"`
 }
