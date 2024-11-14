@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -66,7 +67,7 @@ func TransactionRoutes(r *mux.Router, transactionService *service.TransactionSer
 			http.Error(w, "Invalid request body", http.StatusBadRequest)
 			return
 		}
-		
+
 		transaction, err := transactionService.CreateInquiryTransaction(req)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -84,6 +85,11 @@ func TransactionRoutes(r *mux.Router, transactionService *service.TransactionSer
 	r.HandleFunc("/api/transaction/insert", func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseMultipartForm(10 << 20); err != nil {
 			http.Error(w, "Unable to parse form", http.StatusBadRequest)
+			return
+		}
+
+		if transactionService == nil {
+			http.Error(w, "Transaction service not initialized", http.StatusInternalServerError)
 			return
 		}
 
@@ -121,15 +127,29 @@ func TransactionRoutes(r *mux.Router, transactionService *service.TransactionSer
 			return
 		}
 
-		file, _, err := r.FormFile("image")
+		file, fileHeader, err := r.FormFile("image")
 		if err != nil {
 			http.Error(w, "Image file is required", http.StatusBadRequest)
+			return
 		}
-		defer file.Close()
+		if file == nil {
+			http.Error(w, "Image file is empty", http.StatusBadRequest)
+			return
+		}
+		defer func() {
+			if file != nil {
+				file.Close()
+			}
+		}()
+
+		if fileHeader.Size > 10<<20 { 
+			http.Error(w, "File size too large", http.StatusBadRequest)
+			return
+		}
 
 		imageData, err := io.ReadAll(file)
 		if err != nil {
-			http.Error(w, "Could not read image file", http.StatusInternalServerError)
+			http.Error(w, "Could not read image file: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -151,13 +171,15 @@ func TransactionRoutes(r *mux.Router, transactionService *service.TransactionSer
 
 		transaction, err := transactionService.CreateInsertionTransaction(&req)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Printf("Error creating insertion transaction: %v", err)
+			http.Error(w, "Failed to create transaction: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		if err := json.NewEncoder(w).Encode(transaction); err != nil {
+			log.Printf("Error encoding response: %v", err)
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 			return
 		}
