@@ -100,6 +100,7 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.GetAllTra
 			Image:              &insertion.Image,
 			ItemID:             insertion.ItemID,
 			Item:               insertion.Item,
+			ItemRequest:        &insertion.ItemRequest,
 		}
 
 		transactions = append(transactions, transaction)
