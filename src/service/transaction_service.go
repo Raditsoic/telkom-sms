@@ -107,11 +107,6 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.GetAllTra
 }
 
 func (s *TransactionService) CreateInsertionTransaction(insertion *model.InsertionTransaction) (*model.InsertionTransaction, error) {
-	_, err := s.itemRepository.CreateItem(&insertion.Item)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create item: %w", err)
-	}
-
 	insertion.UUID = uuid.New()
 
 	insertion.TransactionType = "insert"
@@ -259,9 +254,9 @@ func (s *TransactionService) UpdateTransactionStatus(status, uuidStr string) (*m
 
 		switch status {
 		case "approved":
-			item.Quantity += insertion.Item.Quantity
-			if err := s.itemRepository.UpdateItem(item); err != nil {
-				return nil, fmt.Errorf("failed to update item quantity: %w", err)
+			_, err := s.itemRepository.CreateItem(&item)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create item: %w", err)
 			}
 		case "rejected":
 		default:
