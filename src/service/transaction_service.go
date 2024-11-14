@@ -181,7 +181,7 @@ func (s *TransactionService) UpdateTransactionStatus(status, uuidStr string) (*m
 		return nil, fmt.Errorf("invalid UUID format, expected type_UUID but got: %s", uuidStr)
 	}
 
-	transaction_type := parts[0]
+	transactionType := parts[0]
 	uuid, err := uuid.Parse(parts[1])
 	if err != nil {
 		return nil, fmt.Errorf("invalid UUID: %w", err)
@@ -189,139 +189,150 @@ func (s *TransactionService) UpdateTransactionStatus(status, uuidStr string) (*m
 
 	status = strings.ToLower(status)
 
-	if transaction_type == "loan" {
-		loan, err := s.logRepository.GetLoanTransactionByUUID(uuid)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get loan transaction: %w", err)
-		}
-
-		if loan.Status == "returned" {
-			return nil, fmt.Errorf("loan transaction already returned")
-		}
-
-		item := loan.Item
-
-		switch status {
-		case "returned":
-			item.Quantity += loan.Quantity
-			if err := s.itemRepository.UpdateItem(*item); err != nil {
-				return nil, fmt.Errorf("failed to update item quantity: %w", err)
-			}
-		case "approved":
-			if item.Quantity < loan.Quantity {
-				return nil, fmt.Errorf("insufficient quantity")
-			}
-
-			item.Quantity -= loan.Quantity
-			if err := s.itemRepository.UpdateItem(*item); err != nil {
-				return nil, fmt.Errorf("failed to update item quantity: %w", err)
-			}
-		case "rejected":
-		default:
-			return nil, fmt.Errorf("invalid status")
-		}
-
-		loan.Status = status
-		if err := s.logRepository.UpdateLoanTransaction(loan); err != nil {
-			return nil, fmt.Errorf("failed to update loan transaction: %w", err)
-		}
-
-		return &model.UpdateTransactionResponse{
-			Message: fmt.Sprintf("Loan transaction %s successfully", status),
-		}, nil
-	} else if transaction_type == "inquiry" {
-		inquiry, err := s.logRepository.GetInquiryTransactionByUUID(uuid)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get inquiry transaction: %w", err)
-		}
-
-		item := inquiry.Item
-
-		switch status {
-		case "approved":
-			if item.Quantity < inquiry.Quantity {
-				return nil, fmt.Errorf("insufficient quantity")
-			}
-
-			item.Quantity -= inquiry.Quantity
-			if err := s.itemRepository.UpdateItem(*item); err != nil {
-				return nil, fmt.Errorf("failed to update item quantity: %w", err)
-			}
-		case "rejected":
-		default:
-			return nil, fmt.Errorf("invalid status")
-		}
-
-		inquiry.Status = status
-		if err := s.logRepository.UpdateInquiryTransaction(inquiry); err != nil {
-			return nil, fmt.Errorf("failed to update inquiry transaction: %w", err)
-		}
-
-		return &model.UpdateTransactionResponse{
-			Message: fmt.Sprintf("Inquiry transaction %s successfully", status),
-		}, nil
-	} else if transaction_type == "insert" {
-		insertion, err := s.logRepository.GetInsertionTransactionByUUID(uuid)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get insertion transaction: %w", err)
-		}
-
-		if insertion.Status != "pending" {
-			return nil, fmt.Errorf("transaction has already been %s", insertion.Status)
-		}
-
-		switch status {
-		case "approved":
-			existingItem, err := s.itemRepository.GetItemByName(insertion.ItemRequest.Name)
-			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-				return nil, fmt.Errorf("failed to check existing item: %w", err)
-			}
-
-			var item *model.Item
-			if existingItem != nil {
-				existingItem.Quantity += insertion.ItemRequest.Quantity
-				existingItem.Shelf = insertion.ItemRequest.Shelf
-				existingItem.CategoryID = insertion.ItemRequest.CategoryID
-
-				if err := s.itemRepository.UpdateItem(*existingItem); err != nil {
-					return nil, fmt.Errorf("failed to update existing item: %w", err)
-				}
-				item = existingItem
-			} else {
-				// Create new item from the request data
-				newItem := &model.Item{
-					Name:       insertion.ItemRequest.Name,
-					Quantity:   insertion.ItemRequest.Quantity,
-					Shelf:      insertion.ItemRequest.Shelf,
-					CategoryID: insertion.ItemRequest.CategoryID,
-				}
-
-				createdItem, err := s.itemRepository.CreateItem(newItem)
-				if err != nil {
-					return nil, fmt.Errorf("failed to create new item: %w", err)
-				}
-				item = createdItem
-			}
-
-			// Update the insertion transaction with the item ID
-			itemID := item.ID
-			insertion.ItemID = &itemID
-			insertion.Item = item
-
-		case "rejected":
-		default:
-			return nil, fmt.Errorf("invalid status")
-		}
-
-		insertion.Status = status
-		if err := s.logRepository.UpdateInsertionTransaction(insertion); err != nil {
-			return nil, fmt.Errorf("failed to update insertion transaction: %w", err)
-		}
-
-		return &model.UpdateTransactionResponse{
-			Message: fmt.Sprintf("Insertion transaction %s successfully", status),
-		}, nil
-	} else {
+	switch transactionType {
+	case "loan":
+		return s.updateLoanTransaction(uuid, status)
+	case "inquiry":
+		return s.updateInquiryTransaction(uuid, status)
+	case "insert":
+		return s.updateInsertionTransaction(uuid, status)
+	default:
 		return nil, utils.ErrTransactionType
 	}
+}
+
+func (s *TransactionService) updateLoanTransaction(uuid uuid.UUID, status string) (*model.UpdateTransactionResponse, error) {
+	loan, err := s.logRepository.GetLoanTransactionByUUID(uuid)
+	if err != nil {
+		return nil, utils.ErrTransactionNotFound
+	}
+
+	if loan.Status == "returned" {
+		return nil, fmt.Errorf("loan transaction already returned")
+	}
+
+	item := loan.Item
+
+	switch status {
+	case "returned":
+		item.Quantity += loan.Quantity
+		if err := s.itemRepository.UpdateItem(*item); err != nil {
+			return nil, fmt.Errorf("failed to update item quantity: %w", err)
+		}
+	case "approved":
+		if item.Quantity < loan.Quantity {
+			return nil, fmt.Errorf("insufficient quantity")
+		}
+
+		item.Quantity -= loan.Quantity
+		if err := s.itemRepository.UpdateItem(*item); err != nil {
+			return nil, fmt.Errorf("failed to update item quantity: %w", err)
+		}
+	case "rejected":
+	default:
+		return nil, fmt.Errorf("invalid status")
+	}
+
+	loan.Status = status
+	if err := s.logRepository.UpdateLoanTransaction(loan); err != nil {
+		return nil, fmt.Errorf("failed to update loan transaction: %w", err)
+	}
+
+	return &model.UpdateTransactionResponse{
+		Message: fmt.Sprintf("Loan transaction %s successfully", status),
+	}, nil
+}
+
+func (s *TransactionService) updateInquiryTransaction(uuid uuid.UUID, status string) (*model.UpdateTransactionResponse, error) {
+	inquiry, err := s.logRepository.GetInquiryTransactionByUUID(uuid)
+	if err != nil {
+		return nil, utils.ErrTransactionNotFound
+	}
+
+	item := inquiry.Item
+
+	switch status {
+	case "approved":
+		if item.Quantity < inquiry.Quantity {
+			return nil, fmt.Errorf("insufficient quantity")
+		}
+
+		item.Quantity -= inquiry.Quantity
+		if err := s.itemRepository.UpdateItem(*item); err != nil {
+			return nil, fmt.Errorf("failed to update item quantity: %w", err)
+		}
+	case "rejected":
+	default:
+		return nil, fmt.Errorf("invalid status")
+	}
+
+	inquiry.Status = status
+	if err := s.logRepository.UpdateInquiryTransaction(inquiry); err != nil {
+		return nil, fmt.Errorf("failed to update inquiry transaction: %w", err)
+	}
+
+	return &model.UpdateTransactionResponse{
+		Message: fmt.Sprintf("Inquiry transaction %s successfully", status),
+	}, nil
+}
+
+func (s *TransactionService) updateInsertionTransaction(uuid uuid.UUID, status string) (*model.UpdateTransactionResponse, error) {
+	insertion, err := s.logRepository.GetInsertionTransactionByUUID(uuid)
+	if err != nil {
+		return nil, utils.ErrTransactionNotFound
+	}
+
+	if insertion.Status != "pending" {
+		return nil, fmt.Errorf("transaction has already been %s", insertion.Status)
+	}
+
+	switch status {
+	case "approved":
+		existingItem, err := s.itemRepository.GetItemByName(insertion.ItemRequest.Name)
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("failed to check existing item: %w", err)
+		}
+
+		var item *model.Item
+		if existingItem != nil {
+			existingItem.Quantity += insertion.ItemRequest.Quantity
+			existingItem.Shelf = insertion.ItemRequest.Shelf
+			existingItem.CategoryID = insertion.ItemRequest.CategoryID
+
+			if err := s.itemRepository.UpdateItem(*existingItem); err != nil {
+				return nil, fmt.Errorf("failed to update existing item: %w", err)
+			}
+			item = existingItem
+		} else {
+			newItem := &model.Item{
+				Name:       insertion.ItemRequest.Name,
+				Quantity:   insertion.ItemRequest.Quantity,
+				Shelf:      insertion.ItemRequest.Shelf,
+				CategoryID: insertion.ItemRequest.CategoryID,
+			}
+
+			createdItem, err := s.itemRepository.CreateItem(newItem)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create new item: %w", err)
+			}
+			item = createdItem
+		}
+
+		itemID := item.ID
+		insertion.ItemID = &itemID
+		insertion.Item = item
+
+	case "rejected":
+	default:
+		return nil, fmt.Errorf("invalid status")
+	}
+
+	insertion.Status = status
+	if err := s.logRepository.UpdateInsertionTransaction(insertion); err != nil {
+		return nil, fmt.Errorf("failed to update insertion transaction: %w", err)
+	}
+
+	return &model.UpdateTransactionResponse{
+		Message: fmt.Sprintf("Insertion transaction %s successfully", status),
+	}, nil
 }

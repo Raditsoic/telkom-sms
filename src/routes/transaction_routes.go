@@ -212,6 +212,10 @@ func TransactionRoutes(r *mux.Router, transactionService *service.TransactionSer
 				http.Error(w, "Invalid transaction type", http.StatusBadRequest)
 				return
 			}
+			if errors.Is(err, utils.ErrTransactionNotFound) {
+				http.Error(w, "Transaction not found", http.StatusNotFound)
+				return
+			}
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
