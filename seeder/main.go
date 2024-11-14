@@ -329,6 +329,7 @@ func main() {
 
 	// 2. Create Categories with valid StorageID references
 	categories := []Category{
+		// Storage ID: 0 (ATK)
 		{Name: "Amplop", StorageID: uint(storages[0].ID), Image: images.Amplop},
 		{Name: "Kertas", StorageID: uint(storages[0].ID), Image: images.Kertas},
 		{Name: "Baterai", StorageID: uint(storages[0].ID), Image: images.Baterai},
@@ -356,6 +357,15 @@ func main() {
 		{Name: "Gunting", StorageID: uint(storages[0].ID), Image: images.Gunting},
 		{Name: "Penggaris", StorageID: uint(storages[0].ID), Image: images.Penggaris},
 		{Name: "Plong Kertas", StorageID: uint(storages[0].ID), Image: images.PlongKertas},
+
+		// Storage ID: 1 (Lantai 8)
+		{Name: "Amplop", StorageID: uint(storages[1].ID), Image: images.Amplop},
+		{Name: "Kertas", StorageID: uint(storages[1].ID), Image: images.Kertas},
+		{Name: "Baterai", StorageID: uint(storages[1].ID), Image: images.Baterai},
+		{Name: "Board Marker", StorageID: uint(storages[1].ID), Image: images.BoardMarker},
+		{Name: "Pulpen", StorageID: uint(storages[1].ID), Image: images.PulpenFaster},
+		{Name: "Double Tape", StorageID: uint(storages[1].ID), Image: images.DoubleTape},
+		{Name: "Isolasi", StorageID: uint(storages[1].ID), Image: images.Isolasi},
 	}
 
 	fmt.Println("Creating categories...")
