@@ -31,7 +31,6 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.GetAllTra
 		return nil, err
 	}
 
-	
 	for _, loan := range loanTransactions {
 		customUUID := fmt.Sprintf("%s_%s", "loan", loan.UUID)
 
@@ -247,6 +246,7 @@ func (s *TransactionService) updateLoanTransaction(uuid uuid.UUID, status string
 
 	return &model.UpdateTransactionResponse{
 		Message: fmt.Sprintf("Loan transaction %s successfully", status),
+		ID:      uuid.String(),
 	}, nil
 }
 
@@ -280,6 +280,7 @@ func (s *TransactionService) updateInquiryTransaction(uuid uuid.UUID, status str
 
 	return &model.UpdateTransactionResponse{
 		Message: fmt.Sprintf("Inquiry transaction %s successfully", status),
+		ID:      uuid.String(),
 	}, nil
 }
 
@@ -341,6 +342,7 @@ func (s *TransactionService) updateInsertionTransaction(uuid uuid.UUID, status s
 
 	return &model.UpdateTransactionResponse{
 		Message: fmt.Sprintf("Insertion transaction %s successfully", status),
+		ID:      uuid.String(),
 	}, nil
 }
 
@@ -369,31 +371,46 @@ func (s *TransactionService) DeleteTransaction(uuidStr string) (*model.DeleteTra
 }
 
 func (s *TransactionService) deleteLoanTransaction(uuid uuid.UUID) (*model.DeleteTransactionResponse, error) {
+	if _, err := s.logRepository.GetLoanTransactionByUUID(uuid); err != nil {
+		return nil, utils.ErrTransactionNotFound
+	}
+
 	if err := s.logRepository.DeleteLoanTransactionByUUID(uuid); err != nil {
 		return nil, fmt.Errorf("failed to delete loan transaction: %w", err)
 	}
 
 	return &model.DeleteTransactionResponse{
 		Message: "Loan transaction deleted successfully",
+		ID:      uuid.String(),
 	}, nil
 }
 
 func (s *TransactionService) deleteInquiryTransaction(uuid uuid.UUID) (*model.DeleteTransactionResponse, error) {
+	if _, err := s.logRepository.GetInquiryTransactionByUUID(uuid); err != nil {
+		return nil, utils.ErrTransactionNotFound
+	}
+
 	if err := s.logRepository.DeleteInquiryTransactionByUUID(uuid); err != nil {
 		return nil, fmt.Errorf("failed to delete inquiry transaction: %w", err)
 	}
 
 	return &model.DeleteTransactionResponse{
 		Message: "Inquiry transaction deleted successfully",
+		ID:      uuid.String(),
 	}, nil
 }
 
 func (s *TransactionService) deleteInsertionTransaction(uuid uuid.UUID) (*model.DeleteTransactionResponse, error) {
+	if _, err := s.logRepository.GetInsertionTransactionByUUID(uuid); err != nil {
+		return nil, utils.ErrTransactionNotFound
+	}
+
 	if err := s.logRepository.DeleteInsertionTransactionByUUID(uuid); err != nil {
 		return nil, fmt.Errorf("failed to delete insertion transaction: %w", err)
 	}
 
 	return &model.DeleteTransactionResponse{
 		Message: "Insertion transaction deleted successfully",
+		ID:      uuid.String(),
 	}, nil
 }

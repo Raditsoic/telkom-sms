@@ -9,6 +9,11 @@ type Item struct {
 	Category   Category `json:"-" gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
+type DeleteItemResponse struct {
+	Message string `json:"message"`
+	ID      string   `json:"id"`
+}
+
 /*
 	name: Biru
 	quantity: 10
