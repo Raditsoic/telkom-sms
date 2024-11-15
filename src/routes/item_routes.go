@@ -50,13 +50,18 @@ func ItemRoutes(r *mux.Router, itemService *service.ItemService, jwtUtils *utils
 		vars := mux.Vars(r)
 		id := vars["id"]
 
-		if err := itemService.DeleteItem(id); err != nil {
+		response, err := itemService.DeleteItem(id); 
+		if err != nil {
+			if err == utils.ErrItemNotFound {
+				http.Error(w, err.Error(), http.StatusNotFound)
+				return
+			}
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode("Item deleted"); err != nil {
+		if err := json.NewEncoder(w).Encode(response); err != nil {
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 			return
 		}

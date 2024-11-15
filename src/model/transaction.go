@@ -83,25 +83,27 @@ type InsertionTransactionRequest struct {
 }
 
 type GetAllTransactionsResponse struct {
-	UUID               string         `json:"uuid"`
-	TransactionType    string         `json:"transaction_type"`
-	EmployeeName       string         `json:"employee_name"`
-	EmployeeDepartment string         `json:"employee_department"`
-	EmployeePosition   string         `json:"employee_position"`
-	Quantity           int            `json:"quantity"`
-	Status             string         `json:"status"`
-	Notes              string         `json:"notes"`
-	Time               time.Time      `json:"time"`
-	Image              *[]byte        `json:"image"`
-	LoanTime           *time.Time     `json:"loan_time,omitempty"`
-	ReturnTime         *time.Time     `json:"return_time,omitempty"`
+	UUID               string          `json:"uuid"`
+	TransactionType    string          `json:"transaction_type"`
+	EmployeeName       string          `json:"employee_name"`
+	EmployeeDepartment string          `json:"employee_department"`
+	EmployeePosition   string          `json:"employee_position"`
+	Quantity           int             `json:"quantity"`
+	Status             string          `json:"status"`
+	Notes              string          `json:"notes"`
+	Time               time.Time       `json:"time"`
+	Image              *[]byte         `json:"image"`
+	LoanTime           *time.Time      `json:"loan_time,omitempty"`
+	ReturnTime         *time.Time      `json:"return_time,omitempty"`
 	ItemRequest        *ItemRequestDTO `json:"item_request"`
 }
 
 type UpdateTransactionResponse struct {
 	Message string `json:"message"`
+	ID      string `json:"id"`
 }
 
 type DeleteTransactionResponse struct {
 	Message string `json:"message"`
+	ID      string `json:"id"`
 }

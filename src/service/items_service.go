@@ -5,6 +5,7 @@ import (
 
 	"gtihub.com/raditsoic/telkom-storage-ms/src/database/repository"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/utils"
 )
 
 type ItemService struct {
@@ -42,16 +43,18 @@ func (service *ItemService) GetItemByID(id string) (*model.Item, error) {
 	return service.itemRepository.GetItemByID(id)
 }
 
-func (service *ItemService) DeleteItem(id string) error {
-	_, err := service.GetItemByID(id)
-	if err != nil {
-		return err
+func (service *ItemService) DeleteItem(id string) (*model.DeleteItemResponse, error) {
+	if _, err := service.itemRepository.GetItemByID(id); err != nil {
+		return nil, utils.ErrItemNotFound
 	}
 
-	err = service.itemRepository.DeleteItem(id)
+	err := service.itemRepository.DeleteItem(id)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return service.itemRepository.DeleteItem(id)
+	return &model.DeleteItemResponse{
+		Message: "Item deleted successfully",
+		ID:      id,
+	}, nil
 }
