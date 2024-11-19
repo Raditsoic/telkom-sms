@@ -7,35 +7,38 @@ import (
 )
 
 type LoanTransaction struct {
-	ID                 uint      `gorm:"primaryKey" json:"id"`
-	UUID               uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();uniqueIndex" json:"uuid"`
-	TransactionType    string    `json:"transaction_type"`
-	EmployeeName       string    `json:"employee_name"`
-	EmployeeDepartment string    `json:"employee_department"`
-	EmployeePosition   string    `json:"employee_position"`
-	Quantity           int       `json:"quantity"`
-	Status             string    `json:"status"`
-	Time               time.Time `json:"time"`
-	Notes              string    `json:"notes"`
-	ItemID             uint      `json:"item_id"`
-	Item               *Item     `gorm:"foreignKey:ItemID" json:"item"`
-	LoanTime           time.Time `json:"loan_time"`
-	ReturnTime         time.Time `json:"return_time"`
+	ID                 uint       `gorm:"primaryKey" json:"id"`
+	UUID               uuid.UUID  `gorm:"type:uuid;default:uuid_generate_v4();uniqueIndex" json:"uuid"`
+	TransactionType    string     `json:"transaction_type"`
+	EmployeeName       string     `json:"employee_name"`
+	EmployeeDepartment string     `json:"employee_department"`
+	EmployeePosition   string     `json:"employee_position"`
+	Quantity           int        `json:"quantity"`
+	Status             string     `json:"status"`
+	Time               time.Time  `json:"time"`
+	Notes              string     `json:"notes"`
+	ItemID             uint       `json:"item_id"`
+	Item               *Item      `gorm:"foreignKey:ItemID" json:"item"`
+	LoanTime           time.Time  `json:"loan_time"`
+	ReturnTime         time.Time  `json:"return_time"`
+	CompletedTime      *time.Time `json:"completed_time"`
+	ReturnedTime       *time.Time `json:"returned_time"`
 }
 
 type InquiryTransaction struct {
-	ID                 uint      `gorm:"primaryKey" json:"id"`
-	UUID               uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();uniqueIndex" json:"uuid"`
-	TransactionType    string    `json:"transaction_type"`
-	EmployeeName       string    `json:"employee_name"`
-	EmployeeDepartment string    `json:"employee_department"`
-	EmployeePosition   string    `json:"employee_position"`
-	Quantity           int       `json:"quantity"`
-	Status             string    `json:"status"`
-	Notes              string    `json:"notes"`
-	Time               time.Time `json:"time"`
-	ItemID             uint      `json:"item_id"`
-	Item               *Item     `gorm:"foreignKey:ItemID" json:"item"`
+	ID                 uint       `gorm:"primaryKey" json:"id"`
+	UUID               uuid.UUID  `gorm:"type:uuid;default:uuid_generate_v4();uniqueIndex" json:"uuid"`
+	TransactionType    string     `json:"transaction_type"`
+	EmployeeName       string     `json:"employee_name"`
+	EmployeeDepartment string     `json:"employee_department"`
+	EmployeePosition   string     `json:"employee_position"`
+	Quantity           int        `json:"quantity"`
+	Status             string     `json:"status"`
+	Notes              string     `json:"notes"`
+	Time               time.Time  `json:"time"`
+	ItemID             uint       `json:"item_id"`
+	Item               *Item      `gorm:"foreignKey:ItemID" json:"item"`
+	CompletedTime      *time.Time `json:"completed_time"`
 }
 
 type InsertionTransaction struct {
@@ -49,9 +52,10 @@ type InsertionTransaction struct {
 	Notes              string         `json:"notes"`
 	Time               time.Time      `json:"time"`
 	Image              []byte         `json:"image"`
-	ItemID             *uint          `json:"item_id"`                                                                     // Make it nullable
-	Item               *Item          `json:"item" gorm:"foreignKey:ItemID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"` // Make it nullable
-	ItemRequest        ItemRequestDTO `gorm:"embedded;embeddedPrefix:item_request_" json:"item_request"`                   // Embed the request data
+	ItemID             *uint          `json:"item_id"`
+	Item               *Item          `json:"item" gorm:"foreignKey:ItemID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	ItemRequest        ItemRequestDTO `gorm:"embedded;embeddedPrefix:item_request_" json:"item_request"`
+	CompletedTime      *time.Time     `json:"completed_time"`
 }
 
 type CreateInsertionTransactionDTO struct {
@@ -96,6 +100,8 @@ type GetAllTransactionsResponse struct {
 	LoanTime           *time.Time      `json:"loan_time,omitempty"`
 	ReturnTime         *time.Time      `json:"return_time,omitempty"`
 	ItemRequest        *ItemRequestDTO `json:"item_request"`
+	CompletedTime      *time.Time      `json:"completed_time,omitempty"`
+	ReturnedTime       *time.Time      `json:"returned_time,omitempty"`
 }
 
 type UpdateTransactionResponse struct {
