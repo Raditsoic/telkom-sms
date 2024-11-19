@@ -54,6 +54,8 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.GetAllTra
 			LoanTime:           &loan.LoanTime,
 			ReturnTime:         &loan.ReturnTime,
 			ItemRequest:        &itemRequest,
+			CompletedTime:      loan.CompletedTime,
+			ReturnedTime:       loan.ReturnedTime,
 		}
 
 		transactions = append(transactions, transaction)
@@ -84,6 +86,7 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.GetAllTra
 			Time:               inquiry.Time,
 			Notes:              inquiry.Notes,
 			ItemRequest:        &itemRequest,
+			CompletedTime:      inquiry.CompletedTime,
 		}
 
 		transactions = append(transactions, transaction)
@@ -106,6 +109,7 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.GetAllTra
 			Notes:              insertion.Notes,
 			Image:              &insertion.Image,
 			ItemRequest:        &insertion.ItemRequest,
+			CompletedTime:      insertion.CompletedTime,
 		}
 
 		transactions = append(transactions, transaction)
@@ -222,18 +226,23 @@ func (s *TransactionService) updateLoanTransaction(uuid uuid.UUID, status string
 	switch status {
 	case "returned":
 		item.Quantity += loan.Quantity
+		now := time.Now()
+		loan.ReturnedTime = &now
 		if err := s.itemRepository.UpdateItem(*item); err != nil {
 			return nil, fmt.Errorf("failed to update item quantity: %w", err)
 		}
-	case "approved":
+	case "completed":
 		if item.Quantity < loan.Quantity {
 			return nil, fmt.Errorf("insufficient quantity")
 		}
 
 		item.Quantity -= loan.Quantity
+		now := time.Now()
+		loan.CompletedTime = &now
 		if err := s.itemRepository.UpdateItem(*item); err != nil {
 			return nil, fmt.Errorf("failed to update item quantity: %w", err)
 		}
+	case "approved":
 	case "rejected":
 	default:
 		return nil, fmt.Errorf("invalid status")
@@ -259,15 +268,18 @@ func (s *TransactionService) updateInquiryTransaction(uuid uuid.UUID, status str
 	item := inquiry.Item
 
 	switch status {
-	case "approved":
+	case "completed":
 		if item.Quantity < inquiry.Quantity {
 			return nil, fmt.Errorf("insufficient quantity")
 		}
 
 		item.Quantity -= inquiry.Quantity
+		now := time.Now()
+		inquiry.CompletedTime = &now
 		if err := s.itemRepository.UpdateItem(*item); err != nil {
 			return nil, fmt.Errorf("failed to update item quantity: %w", err)
 		}
+	case "approved":
 	case "rejected":
 	default:
 		return nil, fmt.Errorf("invalid status")
@@ -290,12 +302,8 @@ func (s *TransactionService) updateInsertionTransaction(uuid uuid.UUID, status s
 		return nil, utils.ErrTransactionNotFound
 	}
 
-	if insertion.Status != "pending" {
-		return nil, fmt.Errorf("transaction has already been %s", insertion.Status)
-	}
-
 	switch status {
-	case "approved":
+	case "completed":
 		existingItem, err := s.itemRepository.GetItemByName(insertion.ItemRequest.Name)
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("failed to check existing item: %w", err)
@@ -329,7 +337,12 @@ func (s *TransactionService) updateInsertionTransaction(uuid uuid.UUID, status s
 		itemID := item.ID
 		insertion.ItemID = &itemID
 		insertion.Item = item
-
+		now := time.Now()
+		insertion.CompletedTime = &now
+		if err := s.logRepository.UpdateInsertionTransaction(insertion); err != nil {
+			return nil, fmt.Errorf("failed to update insertion transaction: %w", err)
+		}
+	case "approved":
 	case "rejected":
 	default:
 		return nil, fmt.Errorf("invalid status")
