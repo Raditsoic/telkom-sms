@@ -31,7 +31,7 @@ func CategoryRoutes(r *mux.Router, categoryService *service.CategoryService, jwt
 		}
 	}).Methods("GET")
 
-	r.Handle("/api/category", middleware.AuthMiddleware(jwtUtils, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/api/category", func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseMultipartForm(10 << 20); err != nil {
 			http.Error(w, "Unable to parse form", http.StatusBadRequest)
 			return
@@ -82,7 +82,7 @@ func CategoryRoutes(r *mux.Router, categoryService *service.CategoryService, jwt
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 			return
 		}
-	}))).Methods("POST")
+	}).Methods("POST")
 
 	r.HandleFunc("/api/category/{id}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
