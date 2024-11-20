@@ -100,8 +100,8 @@ type GetAllTransactionsResponse struct {
 	LoanTime           *time.Time      `json:"loan_time,omitempty"`
 	ReturnTime         *time.Time      `json:"return_time,omitempty"`
 	ItemRequest        *ItemRequestDTO `json:"item_request"`
-	CompletedTime      *time.Time      `json:"completed_time,omitempty"`
-	ReturnedTime       *time.Time      `json:"returned_time,omitempty"`
+	CompletedTime      *time.Time      `json:"completed_time"`
+	ReturnedTime       *time.Time      `json:"returned_time"`
 }
 
 type UpdateTransactionResponse struct {
