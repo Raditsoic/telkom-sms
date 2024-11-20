@@ -243,6 +243,7 @@ func (s *TransactionService) updateLoanTransaction(uuid uuid.UUID, status string
 			return nil, fmt.Errorf("failed to update item quantity: %w", err)
 		}
 	case "approved":
+	case "incomplete":
 	case "rejected":
 	default:
 		return nil, fmt.Errorf("invalid status")
@@ -280,6 +281,7 @@ func (s *TransactionService) updateInquiryTransaction(uuid uuid.UUID, status str
 			return nil, fmt.Errorf("failed to update item quantity: %w", err)
 		}
 	case "approved":
+	case "incomplete":
 	case "rejected":
 	default:
 		return nil, fmt.Errorf("invalid status")
@@ -343,6 +345,7 @@ func (s *TransactionService) updateInsertionTransaction(uuid uuid.UUID, status s
 			return nil, fmt.Errorf("failed to update insertion transaction: %w", err)
 		}
 	case "approved":
+	case "incomplete":
 	case "rejected":
 	default:
 		return nil, fmt.Errorf("invalid status")
