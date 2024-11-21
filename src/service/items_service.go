@@ -60,10 +60,7 @@ func (service *ItemService) DeleteItem(id string) (*model.DeleteItemResponse, er
 	}, nil
 }
 
-func (service *ItemService) UpdateItemName(id, new_name string) (*struct {
-	NewName string `json:"new_name"`
-	OldName string `json:"old_name"`
-}, error) {
+func (service *ItemService) UpdateItemName(id, new_name string) (*model.UpdateCategoryNameResponse, error) {
 	item, err := service.itemRepository.GetItemByID(id)
 	if err != nil {
 		fmt.Println("Item not found")
@@ -80,13 +77,12 @@ func (service *ItemService) UpdateItemName(id, new_name string) (*struct {
 		return nil, err
 	}
 
-	update := struct {
-		NewName string `json:"new_name"`
-		OldName string `json:"old_name"`
-	} {
+	response := &model.UpdateCategoryNameResponse{
+		Message: "Item name updated successfully",
+		ID:      id,
 		NewName: new_name,
 		OldName: old_name,
 	}
 
-	return &update, nil
+	return response, nil
 }

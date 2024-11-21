@@ -125,24 +125,20 @@ func CategoryRoutes(r *mux.Router, categoryService *service.CategoryService, jwt
 		vars := mux.Vars(r)
 		id := vars["id"]
 
-		idInt, err := strconv.Atoi(id)
+		response, err := categoryService.DeleteCategory(id)
 		if err != nil {
-			http.Error(w, "Invalid category ID", http.StatusBadRequest)
-			return
-		}
-		if err := categoryService.DeleteCategory(idInt); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode("Category deleted"); err != nil {
+		if err := json.NewEncoder(w).Encode(response); err != nil {
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 			return
 		}
 	})).Methods("DELETE")
 
-	r.HandleFunc("/api/category/{id}/update", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/api/category/{id}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["id"]
 

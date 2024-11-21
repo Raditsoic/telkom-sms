@@ -88,11 +88,11 @@ func ItemRoutes(r *mux.Router, itemService *service.ItemService, jwtUtils *utils
 		}
 	})).Methods("POST")
 
-	r.HandleFunc("/api/item/{id}/update", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/api/item/{id}", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["id"]
 
-		var req model.UpdateItemNameRequestDTO
+		var req model.UpdateItemNameRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, "Invalid request body", http.StatusBadRequest)
 			return

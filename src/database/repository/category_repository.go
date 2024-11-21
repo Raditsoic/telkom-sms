@@ -106,7 +106,7 @@ func (repo *CategoryRepository) UpdateCategory(category model.Category) error {
 	return nil
 }
 
-func (repo *CategoryRepository) DeleteCategory(id int) error {
+func (repo *CategoryRepository) DeleteCategory(id string) error {
 	if err := repo.db.Where("id = ?", id).Delete(&model.Category{}).Error; err != nil {
 		return fmt.Errorf("failed to delete category: %w", err)
 	}

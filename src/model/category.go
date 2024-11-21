@@ -63,6 +63,12 @@ type UpdateCategoryNameResponse struct {
 	OldName string `json:"old_name"`
 }
 
+// Delete Category
+type DeleteCategoryResponse struct {
+	Message string `json:"message"`
+	ID      string `json:"id"`
+}
+
 /*
 {
     "name":"Pulpen",

@@ -61,13 +61,21 @@ func (service *CategoryService) GetCategoryWithItems(categoryID uint) (*model.Ca
 	return response, nil
 }
 
-func (service *CategoryService) DeleteCategory(id int) error {
-	_, err := service.repository.GetCategoryByID(strconv.Itoa(id))
-	if err != nil {
-		return err
+func (service *CategoryService) DeleteCategory(id string) (*model.DeleteCategoryResponse, error) {
+	if _, err := service.repository.GetCategoryByID(id); err != nil {
+		return nil, utils.ErrItemNotFound
 	}
 
-	return service.repository.DeleteCategory(id)
+	if err := service.repository.DeleteCategory(id); err != nil {
+		return nil, err
+	}
+
+	response := &model.DeleteCategoryResponse{
+		Message: "Category deleted successfully",
+		ID:      id,
+	}
+
+	return response, nil
 }
 
 func (service *CategoryService) UpdateCategoryName(id, new_name string) (*model.UpdateCategoryNameResponse, error) {
