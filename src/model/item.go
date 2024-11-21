@@ -6,11 +6,11 @@ type Item struct {
 	Quantity   int      `json:"quantity"`
 	Shelf      string   `json:"shelf"`
 	CategoryID uint     `json:"category_id"`
-	Category   Category `json:"-" gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Category   Category `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"-"`
 
-	LoanTransactions      []LoanTransaction      `gorm:"constraint:OnDelete:CASCADE;" json:"-"`
-	InquiryTransactions   []InquiryTransaction   `gorm:"constraint:OnDelete:CASCADE;" json:"-"`
-	InsertionTransactions []InsertionTransaction `gorm:"constraint:OnDelete:CASCADE;" json:"-"`
+	LoanTransactions      []LoanTransaction      `gorm:"constraint:OnDelete:SET NULL;" json:"-"`
+	InquiryTransactions   []InquiryTransaction   `gorm:"constraint:OnDelete:SET NULL;" json:"-"`
+	InsertionTransactions []InsertionTransaction `gorm:"constraint:OnDelete:SET NULL;" json:"-"`
 }
 
 // Delete Item

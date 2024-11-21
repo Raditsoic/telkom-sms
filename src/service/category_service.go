@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"gorm.io/gorm"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/database/repository"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/utils"
@@ -63,7 +64,7 @@ func (service *CategoryService) GetCategoryWithItems(categoryID uint) (*model.Ca
 
 func (service *CategoryService) DeleteCategory(id string) (*model.DeleteCategoryResponse, error) {
 	if _, err := service.repository.GetCategoryByID(id); err != nil {
-		return nil, utils.ErrItemNotFound
+		return nil, gorm.ErrRecordNotFound
 	}
 
 	if err := service.repository.DeleteCategory(id); err != nil {

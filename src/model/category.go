@@ -5,7 +5,7 @@ type Category struct {
 	Name      string  `json:"name"`
 	StorageID uint    `json:"storage_id"`
 	Image     []byte  `json:"image"`
-	Items     []Item  `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"items"`
+	Items     []Item  `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"items"`
 	Storage   Storage `gorm:"foreignKey:StorageID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"storage"`
 }
 

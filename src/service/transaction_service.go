@@ -34,11 +34,14 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.GetAllTra
 	for _, loan := range loanTransactions {
 		customUUID := fmt.Sprintf("%s_%s", "loan", loan.UUID)
 
-		itemRequest := model.ItemRequestDTO{
-			Name:       loan.Item.Name,
-			Quantity:   loan.Quantity,
-			Shelf:      loan.Item.Shelf,
-			CategoryID: loan.Item.CategoryID,
+		var itemRequest model.ItemRequestDTO
+		if loan.Item != nil {
+			itemRequest = model.ItemRequestDTO{
+				Name:       loan.Item.Name,
+				Quantity:   loan.Quantity,
+				Shelf:      loan.Item.Shelf,
+				CategoryID: loan.Item.CategoryID,
+			}
 		}
 
 		transaction := model.GetAllTransactionsResponse{
@@ -68,11 +71,14 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.GetAllTra
 	for _, inquiry := range inquiryTransactions {
 		customUUID := fmt.Sprintf("%s_%s", "inquiry", inquiry.UUID)
 
-		itemRequest := model.ItemRequestDTO{
-			Name:       inquiry.Item.Name,
-			Quantity:   inquiry.Quantity,
-			Shelf:      inquiry.Item.Shelf,
-			CategoryID: inquiry.Item.CategoryID,
+		var itemRequest model.ItemRequestDTO
+		if inquiry.Item != nil {
+			itemRequest = model.ItemRequestDTO{
+				Name:       inquiry.Item.Name,
+				Quantity:   inquiry.Quantity,
+				Shelf:      inquiry.Item.Shelf,
+				CategoryID: inquiry.Item.CategoryID,
+			}
 		}
 
 		transaction := model.GetAllTransactionsResponse{
@@ -118,6 +124,7 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.GetAllTra
 	return transactions, nil
 }
 
+
 func (s *TransactionService) CreateInsertionTransaction(dto *model.CreateInsertionTransactionDTO) (*model.InsertionTransaction, error) {
 	if dto == nil {
 		return nil, fmt.Errorf("dto cannot be nil")
@@ -134,8 +141,8 @@ func (s *TransactionService) CreateInsertionTransaction(dto *model.CreateInserti
 		Status:             "pending",
 		Image:              dto.Image,
 		ItemRequest:        dto.ItemRequest,
-		ItemID:             nil, // Explicitly set to nil
-		Item:               nil, // Explicitly set to nil
+		ItemID:             nil, 
+		Item:               nil, 
 	}
 
 	if err := s.logRepository.CreateInsertionTransaction(transaction); err != nil {
@@ -148,7 +155,10 @@ func (s *TransactionService) CreateInsertionTransaction(dto *model.CreateInserti
 func (s *TransactionService) CreateLoanTransaction(loan model.LoanTransaction) (*model.LoanTransaction, error) {
 	item, err := s.itemRepository.GetItemByID(fmt.Sprintf("%d", loan.ItemID))
 	if err != nil {
-		return nil, fmt.Errorf("item not found: %w", err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("item with ID %d not found", loan.ItemID)
+		}
+		return nil, fmt.Errorf("error fetching item: %w", err)
 	}
 
 	loan.UUID = uuid.New()

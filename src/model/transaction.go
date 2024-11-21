@@ -17,8 +17,8 @@ type LoanTransaction struct {
 	Status             string     `json:"status"`
 	Time               time.Time  `json:"time"`
 	Notes              string     `json:"notes"`
-	ItemID             uint       `json:"item_id"`
-	Item               *Item      `gorm:"foreignKey:ItemID" json:"item"`
+	ItemID             uint      `json:"item_id"` 
+	Item               *Item      `gorm:"foreignKey:ItemID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"item"`
 	LoanTime           time.Time  `json:"loan_time"`
 	ReturnTime         time.Time  `json:"return_time"`
 	CompletedTime      *time.Time `json:"completed_time"`
@@ -36,8 +36,8 @@ type InquiryTransaction struct {
 	Status             string     `json:"status"`
 	Notes              string     `json:"notes"`
 	Time               time.Time  `json:"time"`
-	ItemID             uint       `json:"item_id"`
-	Item               *Item      `gorm:"foreignKey:ItemID" json:"item"`
+	ItemID             uint      `json:"item_id"` 
+	Item               *Item      `gorm:"foreignKey:ItemID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"item"`
 	CompletedTime      *time.Time `json:"completed_time"`
 }
 
@@ -52,8 +52,8 @@ type InsertionTransaction struct {
 	Notes              string         `json:"notes"`
 	Time               time.Time      `json:"time"`
 	Image              []byte         `json:"image"`
-	ItemID             *uint          `json:"item_id"`
-	Item               *Item          `json:"item" gorm:"foreignKey:ItemID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	ItemID             *uint          `json:"item_id"` // Nullable foreign key
+	Item               *Item          `gorm:"foreignKey:ItemID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"item"`
 	ItemRequest        ItemRequestDTO `gorm:"embedded;embeddedPrefix:item_request_" json:"item_request"`
 	CompletedTime      *time.Time     `json:"completed_time"`
 }
