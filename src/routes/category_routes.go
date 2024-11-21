@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"gtihub.com/raditsoic/telkom-storage-ms/src/middleware"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/service"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/utils"
@@ -31,7 +30,7 @@ func CategoryRoutes(r *mux.Router, categoryService *service.CategoryService, jwt
 		}
 	}).Methods("GET")
 
-	r.Handle("/api/category", middleware.AuthMiddleware(jwtUtils, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/api/category", func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseMultipartForm(10 << 20); err != nil {
 			http.Error(w, "Unable to parse form", http.StatusBadRequest)
 			return
@@ -82,7 +81,7 @@ func CategoryRoutes(r *mux.Router, categoryService *service.CategoryService, jwt
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 			return
 		}
-	}))).Methods("POST")
+	}).Methods("POST")
 
 	r.HandleFunc("/api/category/{id}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -122,24 +121,50 @@ func CategoryRoutes(r *mux.Router, categoryService *service.CategoryService, jwt
 		}
 	}).Methods("GET")
 
-	r.Handle("/api/category/{id}", middleware.AuthMiddleware(jwtUtils, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	r.Handle("/api/category/{id}", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["id"]
 
-		idInt, err := strconv.Atoi(id)
+		response, err := categoryService.DeleteCategory(id)
 		if err != nil {
-			http.Error(w, "Invalid category ID", http.StatusBadRequest)
-			return
-		}
-		if err := categoryService.DeleteCategory(idInt); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode("Category deleted"); err != nil {
+		if err := json.NewEncoder(w).Encode(response); err != nil {
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 			return
 		}
-	}))).Methods("DELETE")
+	})).Methods("DELETE")
+
+	r.HandleFunc("/api/category/{id}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["id"]
+
+		var req model.UpdateCategoryNameRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		response, err := categoryService.UpdateCategoryName(id, req.Name)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		response = &model.UpdateCategoryNameResponse{
+			Message: "Category updated successfully",
+			ID:      id,
+			NewName: response.NewName,
+			OldName: response.OldName,
+		}
+
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		}
+	}).Methods("PATCH")
 }

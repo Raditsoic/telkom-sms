@@ -1,10 +1,12 @@
 package service
 
 import (
+	"fmt"
 	"strconv"
 
 	"gtihub.com/raditsoic/telkom-storage-ms/src/database/repository"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/utils"
 )
 
 type ItemService struct {
@@ -42,16 +44,45 @@ func (service *ItemService) GetItemByID(id string) (*model.Item, error) {
 	return service.itemRepository.GetItemByID(id)
 }
 
-func (service *ItemService) DeleteItem(id string) error {
-	_, err := service.GetItemByID(id)
-	if err != nil {
-		return err
+func (service *ItemService) DeleteItem(id string) (*model.DeleteItemResponse, error) {
+	if _, err := service.itemRepository.GetItemByID(id); err != nil {
+		return nil, utils.ErrItemNotFound
 	}
 
-	err = service.itemRepository.DeleteItem(id)
+	err := service.itemRepository.DeleteItem(id)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return service.itemRepository.DeleteItem(id)
+	return &model.DeleteItemResponse{
+		Message: "Item deleted successfully",
+		ID:      id,
+	}, nil
+}
+
+func (service *ItemService) UpdateItemName(id, new_name string) (*model.UpdateCategoryNameResponse, error) {
+	item, err := service.itemRepository.GetItemByID(id)
+	if err != nil {
+		fmt.Println("Item not found")
+		return nil, utils.ErrItemNotFound
+	}
+
+	old_name := item.Name
+
+	item.Name = new_name
+
+	err = service.itemRepository.UpdateItem(*item)
+	if err != nil {
+		fmt.Println("Failed to update item")
+		return nil, err
+	}
+
+	response := &model.UpdateCategoryNameResponse{
+		Message: "Item name updated successfully",
+		ID:      id,
+		NewName: new_name,
+		OldName: old_name,
+	}
+
+	return response, nil
 }

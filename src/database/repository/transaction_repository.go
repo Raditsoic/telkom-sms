@@ -16,28 +16,28 @@ func NewTransactionRepository(db *gorm.DB) *TransactionRepository {
 	return &TransactionRepository{db: db}
 }
 
-func (repository *TransactionRepository) CreateLoanTransaction(loan model.LoanTransaction) error {
+func (repository *TransactionRepository) CreateLoanTransaction(loan model.LoanTransaction) (*model.LoanTransaction, error) {
 	if err := repository.db.Create(&loan).Error; err != nil {
-		return fmt.Errorf("failed to create loan transaction: %w", err)
+		return nil, fmt.Errorf("failed to create loan transaction: %w", err)
 	}
 
-	return nil
+	return &loan, nil
 }
 
-func (repository *TransactionRepository) CreateInquiryTransaction(inquiry model.InquiryTransaction) error {
+func (repository *TransactionRepository) CreateInquiryTransaction(inquiry model.InquiryTransaction) (*model.InquiryTransaction, error) {
 	if err := repository.db.Create(&inquiry).Error; err != nil {
-		return fmt.Errorf("failed to create loan transaction: %w", err)
+		return nil, fmt.Errorf("failed to create loan transaction: %w", err)
 	}
 
-	return nil
+	return &inquiry, nil
 }
 
-func (repository *TransactionRepository) CreateInsertionTransaction(insert *model.InsertionTransaction) error {
+func (repository *TransactionRepository) CreateInsertionTransaction(insert *model.InsertionTransaction) (*model.InsertionTransaction, error) {
 	if err := repository.db.Create(insert).Error; err != nil {
-		return fmt.Errorf("failed to create insert transaction: %w", err)
+		return nil, fmt.Errorf("failed to create insert transaction: %w", err)
 	}
 
-	return nil
+	return insert, nil
 }
 
 func (repository *TransactionRepository) GetLoanTransactions(limit, offset int) ([]model.LoanTransaction, error) {

@@ -3,8 +3,11 @@ package service
 import (
 	"encoding/json"
 
+	"strconv"
+
 	"gtihub.com/raditsoic/telkom-storage-ms/src/database/repository"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/utils"
 )
 
 type StorageService struct {
@@ -15,32 +18,33 @@ func NewStorageService(repo repository.StorageRepository) *StorageService {
 	return &StorageService{repository: repo}
 }
 
+// Get All Storages
 func (service *StorageService) GetStorages() ([]model.Storage, error) {
 	return service.repository.GetStorages()
 }
 
-func (service *StorageService) CreateStorage(storageData []byte) (*model.Storage, error) {
+// Create Storage
+func (service *StorageService) CreateStorage(storageData []byte) (*model.CreateStorageResponse, error) {
 	var storage model.Storage
 	if err := json.Unmarshal(storageData, &storage); err != nil {
 		return nil, err
 	}
 
-	if err := service.repository.CreateStorage(storage); err != nil {
+	createdStorage, err := service.repository.CreateStorage(storage)
+	if err != nil {
 		return nil, err
 	}
 
-	return &storage, nil
-}
-
-func (service *StorageService) DeleteStorage(id int) error {
-	_, err := service.repository.GetStorageByID(id)
-	if err != nil {
-		return err
+	response := &model.CreateStorageResponse{
+		Message: "Storage created successfully",
+		ID:      strconv.Itoa(createdStorage.ID),
+		Name:    createdStorage.Name,
 	}
 
-	return service.repository.DeleteStorage(id)
+	return response, nil
 }
 
+// Get Storage By ID
 func (service *StorageService) GetStorageByID(id int) (*model.StorageByIDResponse, error) {
 
 	storage, err := service.repository.GetStorageByIDwithCategories(id)
@@ -65,6 +69,7 @@ func (service *StorageService) GetStorageByID(id int) (*model.StorageByIDRespons
 	}, nil
 }
 
+// Get Storage By ID No Image
 func (service *StorageService) GetStorageByIDNoImage(id int) (*model.StorageByIDResponseNoImage, error) {
 
 	storage, err := service.repository.GetStorageByIDwithCategories(id)
@@ -86,4 +91,28 @@ func (service *StorageService) GetStorageByIDNoImage(id int) (*model.StorageByID
 		Location:   storage.Location,
 		Categories: categories,
 	}, nil
+}
+
+// Delete Storage
+func (service *StorageService) DeleteStorage(id string) (*model.DeleteStorageResponse, error) {
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = service.repository.GetStorageByID(idInt)
+	if err != nil {
+		return nil, utils.ErrStorageNotFound
+	}
+
+	if err := service.repository.DeleteStorage(id); err != nil {
+		return nil, err
+	}
+
+	response := &model.DeleteStorageResponse{
+		Message: "Storage deleted successfully",
+		ID:      id,
+	}
+
+	return response, nil
 }

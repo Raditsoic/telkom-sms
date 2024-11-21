@@ -1,48 +1,49 @@
-name: sms-backend
-version: "3"
-
 services:
-    app:
-        build: .
-        ports:
-            - "8080:8080"
-        restart: on-failure
-        env_file: .env
-        volumes:
-            - .:/usr/src/app
-        depends_on:
-            - psql
-        networks:
-            - main_network
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    restart: no
+    env_file: .env
+    volumes:
+      - .:/usr/src/app
+    depends_on:
+      - psql
+    networks:
+      - sms-backend_main_network
 
-    psql:
-        image: postgres:latest
-        hostname: ${DB_HOST}
-        environment:
-            POSTGRES_USER: ${DB_USER}
-            POSTGRES_PASSWORD: ${DB_PASSWORD}
-            POSTGRES_DB: ${DB_NAME}
-        ports:
-            - "5432:5432"
-        volumes:
-            - db_postgres:/var/lib/postgresql/data
-        networks:
-            - main_network
+  psql:
+    image: postgres:latest
+    hostname: ${DB_HOST}
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_postgres:/var/lib/postgresql/data
+    networks:
+      - sms-backend_main_network
 
-    seeder:
-        build:
-            context: .
-            dockerfile: Dockerfile.seeder
-        env_file: .env
-        depends_on:
-            - psql
-        networks:
-            - main_network
-        profiles:
-            - seeder
+  seeder:
+    build:
+      context: .
+      dockerfile: Dockerfile.seeder
+    env_file: .env
+    depends_on:
+      psql:
+        condition: service_started
+    networks:
+      - sms-backend_main_network
+    profiles:
+      - seeder
 
 volumes:
-    db_postgres:
+  db_postgres:
 
 networks:
-    main_network:
+  sms-backend_main_network:
+    name: sms-backend_main_network
+    driver: bridge
+    external: true
