@@ -40,11 +40,20 @@ func (repo *CategoryRepository) CreateCategory(category *model.Category) error {
 	return nil
 }
 
-func (repo *CategoryRepository) GetCategoryByID(id string) (*model.CategoryByIDResponse, error) {
+func (repo *CategoryRepository) GetCategoryByIDStorage(id string) (*model.CategoryByIDResponse, error) {
 	var category model.CategoryByIDResponse
 	if err := repo.db.Model(&model.Category{}).
 		First(&category, id).Error; err != nil {
-		return nil, fmt.Errorf("failed to fetch categories: %w", err)
+		return nil, fmt.Errorf("failed to get category: %w", err)
+	}
+
+	return &category, nil
+}
+
+func (repo *CategoryRepository) GetCategoryByID(id string) (*model.Category, error) {
+	var category model.Category
+	if err := repo.db.Where("id = ?", id).First(&category, id).Error; err != nil {
+		return nil, fmt.Errorf("failed to get category: %w", err)
 	}
 
 	return &category, nil

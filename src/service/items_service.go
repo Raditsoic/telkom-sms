@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"strconv"
 
 	"gtihub.com/raditsoic/telkom-storage-ms/src/database/repository"
@@ -57,4 +58,35 @@ func (service *ItemService) DeleteItem(id string) (*model.DeleteItemResponse, er
 		Message: "Item deleted successfully",
 		ID:      id,
 	}, nil
+}
+
+func (service *ItemService) UpdateItemName(id, new_name string) (*struct {
+	NewName string `json:"new_name"`
+	OldName string `json:"old_name"`
+}, error) {
+	item, err := service.itemRepository.GetItemByID(id)
+	if err != nil {
+		fmt.Println("Item not found")
+		return nil, utils.ErrItemNotFound
+	}
+
+	old_name := item.Name
+
+	item.Name = new_name
+
+	err = service.itemRepository.UpdateItem(*item)
+	if err != nil {
+		fmt.Println("Failed to update item")
+		return nil, err
+	}
+
+	update := struct {
+		NewName string `json:"new_name"`
+		OldName string `json:"old_name"`
+	} {
+		NewName: new_name,
+		OldName: old_name,
+	}
+
+	return &update, nil
 }

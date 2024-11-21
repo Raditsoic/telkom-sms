@@ -14,6 +14,10 @@ type DeleteItemResponse struct {
 	ID      string   `json:"id"`
 }
 
+type UpdateItemNameRequestDTO struct {
+	Name string `json:"name"`
+}
+
 /*
 	name: Biru
 	quantity: 10

@@ -1,10 +1,12 @@
 package service
 
 import (
+	"fmt"
 	"strconv"
 
 	"gtihub.com/raditsoic/telkom-storage-ms/src/database/repository"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/utils"
 )
 
 type CategoryService struct {
@@ -33,12 +35,12 @@ func (s *CategoryService) CreateCategory(category *model.Category) (*model.Categ
 	if err := s.repository.CreateCategory(category); err != nil {
 		return nil, err
 	}
-	
+
 	return category, nil
 }
 
 func (s *CategoryService) GetCategoryByID(id string) (*model.CategoryByIDResponse, error) {
-	return s.repository.GetCategoryByID(id)
+	return s.repository.GetCategoryByIDStorage(id)
 }
 
 func (service *CategoryService) GetCategoryWithItems(categoryID uint) (*model.CategoryWithItemsResponse, error) {
@@ -66,4 +68,27 @@ func (service *CategoryService) DeleteCategory(id int) error {
 	}
 
 	return service.repository.DeleteCategory(id)
+}
+
+func (service *CategoryService) UpdateCategoryName(id, new_name string) (*model.UpdateCategoryNameResponse, error) {
+	category, err := service.repository.GetCategoryByID(id)
+	if err != nil {
+		fmt.Println("Item not found")
+		return nil, utils.ErrItemNotFound
+	}
+
+	old_name := category.Name
+	category.Name = new_name
+
+	if err := service.repository.UpdateCategory(*category); err != nil {
+		return nil, err
+	}
+
+	return &model.UpdateCategoryNameResponse{
+		Message: "Category name updated successfully",
+		ID:      id,
+		NewName: new_name,
+		OldName: old_name,
+	}, nil
+
 }

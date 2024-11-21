@@ -40,14 +40,27 @@ type CategoryWithItemsResponse struct {
 }
 
 type StorageCategoryResponse struct {
-	ID       uint   `json:"id"`
-	Name     string `json:"name"`
-	Image    []byte `json:"image"`
+	ID    uint   `json:"id"`
+	Name  string `json:"name"`
+	Image []byte `json:"image"`
 }
 
 type StorageCategoryNoImageResponse struct {
-	ID       uint   `json:"id"`
-	Name     string `json:"name"`
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
+}
+
+
+// Update Category Name
+type UpdateCategoryNameRequest struct {
+	Name string `json:"name"`
+}
+
+type UpdateCategoryNameResponse struct {
+	Message string `json:"message"`
+	ID      string `json:"id"`
+	NewName string `json:"new_name"`
+	OldName string `json:"old_name"`
 }
 
 /*
