@@ -22,22 +22,20 @@ func NewCategoryRepository(db *gorm.DB) *CategoryRepository {
 	return &CategoryRepository{db: db}
 }
 
-func (repo *CategoryRepository) CreateCategory(category *model.Category) error {
-	// Check if storage exists
+func (repo *CategoryRepository) CreateCategory(category *model.Category) (*model.Category, error) {
 	var storage model.Storage
 	if err := repo.db.First(&storage, category.StorageID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return fmt.Errorf("storage with ID %d not found", category.StorageID)
+			return nil, fmt.Errorf("storage with ID %d not found", category.StorageID)
 		}
-		return fmt.Errorf("failed to check storage: %w", err)
+		return nil, fmt.Errorf("failed to check storage: %w", err)
 	}
 
-	// Create category
 	if err := repo.db.Create(&category).Error; err != nil {
-		return fmt.Errorf("failed to create category: %w", err)
+		return nil, fmt.Errorf("failed to create category: %w", err)
 	}
 
-	return nil
+	return category, nil
 }
 
 func (repo *CategoryRepository) GetCategoryByIDStorage(id string) (*model.CategoryByIDResponse, error) {

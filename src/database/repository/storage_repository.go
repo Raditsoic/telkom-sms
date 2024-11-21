@@ -15,12 +15,12 @@ func NewStorageRepository(db *gorm.DB) *StorageRepository {
 	return &StorageRepository{db: db}
 }
 
-func (repo *StorageRepository) CreateStorage(storage model.Storage) error {
+func (repo *StorageRepository) CreateStorage(storage model.Storage) (*model.Storage, error) {
 	if err := repo.db.Create(&storage).Error; err != nil {
-		return fmt.Errorf("failed to create storage: %w", err)
+		return nil, fmt.Errorf("failed to create storage: %w", err)
 	}
 
-	return nil
+	return &storage, nil
 }
 
 func (repo *StorageRepository) GetStorageByID(id int) (*model.Storage, error) {
@@ -56,7 +56,7 @@ func (repo *StorageRepository) UpdateStorage(storage model.Storage) error {
 	return nil
 }
 
-func (repo *StorageRepository) DeleteStorage(id int) error {
+func (repo *StorageRepository) DeleteStorage(id string) error {
 	if err := repo.db.Where("id = ?", id).Delete(&model.Storage{}).Error; err != nil {
 		return fmt.Errorf("failed to delete storage: %w", err)
 	}

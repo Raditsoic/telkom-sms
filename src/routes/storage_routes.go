@@ -84,23 +84,11 @@ func StorageRoutes(r *mux.Router, storageService *service.StorageService, jwtUti
 	r.HandleFunc("/api/storage/{id}", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["id"]
-		idInt, err := strconv.Atoi(id)
-		if err != nil {
-			http.Error(w, "Invalid storage ID", http.StatusBadRequest)
-			return
-		}
 
-		if err := storageService.DeleteStorage(idInt); err != nil {
+		response, err := storageService.DeleteStorage(id)
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
-		}
-
-		response := struct {
-			Message string `json:"message"`
-			ID      int    `json:"id"`
-		}{
-			Message: "Item deleted successfully",
-			ID:      idInt,
 		}
 
 		w.WriteHeader(http.StatusOK)

@@ -9,12 +9,20 @@ type Category struct {
 	Storage   Storage `gorm:"foreignKey:StorageID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"storage"`
 }
 
+// Create Category
 type CreateCategoryRequest struct {
 	Name      string `form:"name"`
 	Image     []byte `json:"image"`
 	StorageID uint   `form:"storage_id"`
 }
 
+type CreateCategoryResponse struct {
+	Message string `json:"message"`
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+}
+
+// Get All Category
 type AllCategoryResponse struct {
 	ID        uint    `json:"id"`
 	Name      string  `json:"name"`
@@ -23,6 +31,7 @@ type AllCategoryResponse struct {
 	Storage   Storage `json:"storage"`
 }
 
+// Get Category By ID
 type CategoryByIDResponse struct {
 	ID        uint   `json:"id"`
 	Name      string `json:"name"`
@@ -30,6 +39,7 @@ type CategoryByIDResponse struct {
 	StorageID uint   `json:"storage_id"`
 }
 
+// Get Category With Items
 type CategoryWithItemsResponse struct {
 	ID        uint    `json:"id"`
 	Name      string  `json:"name"`

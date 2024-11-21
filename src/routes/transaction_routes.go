@@ -47,8 +47,6 @@ func TransactionRoutes(r *mux.Router, transactionService *service.TransactionSer
 			return
 		}
 
-		fmt.Printf("Decoded request: %+v\n", req)
-
 		transaction, err := transactionService.CreateLoanTransaction(req)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

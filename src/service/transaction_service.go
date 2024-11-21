@@ -125,7 +125,7 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.GetAllTra
 }
 
 
-func (s *TransactionService) CreateInsertionTransaction(dto *model.CreateInsertionTransactionDTO) (*model.InsertionTransaction, error) {
+func (s *TransactionService) CreateInsertionTransaction(dto *model.CreateInsertionTransactionDTO) (*model.CreateInsertionTransactionResponse, error) {
 	if dto == nil {
 		return nil, fmt.Errorf("dto cannot be nil")
 	}
@@ -145,14 +145,23 @@ func (s *TransactionService) CreateInsertionTransaction(dto *model.CreateInserti
 		Item:               nil, 
 	}
 
-	if err := s.logRepository.CreateInsertionTransaction(transaction); err != nil {
+	createdTransaction, err := s.logRepository.CreateInsertionTransaction(transaction)
+	if err != nil {
 		return nil, fmt.Errorf("failed to create insertion transaction: %w", err)
 	}
 
-	return transaction, nil
+	response := &model.CreateInsertionTransactionResponse{
+		Message:      "Insertion transaction created successfully",
+		ID:           createdTransaction.UUID.String(),
+		EmployeeName: createdTransaction.EmployeeName,
+		ItemName:     createdTransaction.ItemRequest.Name,
+		Quantity:     createdTransaction.ItemRequest.Quantity,
+	}
+
+	return response, nil
 }
 
-func (s *TransactionService) CreateLoanTransaction(loan model.LoanTransaction) (*model.LoanTransaction, error) {
+func (s *TransactionService) CreateLoanTransaction(loan model.LoanTransaction) (*model.CreateLoanTransactionResponse, error) {
 	item, err := s.itemRepository.GetItemByID(fmt.Sprintf("%d", loan.ItemID))
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -168,15 +177,27 @@ func (s *TransactionService) CreateLoanTransaction(loan model.LoanTransaction) (
 	loan.Time = time.Now()
 	loan.Status = "pending"
 
-	if err := s.logRepository.CreateLoanTransaction(loan); err != nil {
+	createdTransaction, err := s.logRepository.CreateLoanTransaction(loan); 
+	if err != nil {
 		item.Quantity += loan.Quantity
 		_ = s.itemRepository.UpdateItem(*item)
 		return nil, fmt.Errorf("failed to create loan transaction log: %w", err)
 	}
-	return &loan, nil
+
+	response := &model.CreateLoanTransactionResponse{
+		Message:      "Loan transaction created successfully",
+		ID:           createdTransaction.UUID.String(),
+		EmployeeName: createdTransaction.EmployeeName,
+		Item:         item,
+		Quantity:     createdTransaction.Quantity,
+		LoanTime:     createdTransaction.LoanTime,
+		ReturnTime:   createdTransaction.ReturnTime,
+	}
+
+	return response, nil
 }
 
-func (s *TransactionService) CreateInquiryTransaction(inquiry model.InquiryTransaction) (*model.InquiryTransaction, error) {
+func (s *TransactionService) CreateInquiryTransaction(inquiry model.InquiryTransaction) (*model.CreateInquiryTransactionResponse, error) {
 	item, err := s.itemRepository.GetItemByID(fmt.Sprintf("%d", inquiry.ItemID))
 	if err != nil {
 		return nil, fmt.Errorf("item not found: %w", err)
@@ -187,12 +208,22 @@ func (s *TransactionService) CreateInquiryTransaction(inquiry model.InquiryTrans
 	inquiry.Time = time.Now()
 	inquiry.Status = "pending"
 
-	if err := s.logRepository.CreateInquiryTransaction(inquiry); err != nil {
+	createdTransaction, err := s.logRepository.CreateInquiryTransaction(inquiry)
+	if err != nil {
 		item.Quantity += inquiry.Quantity
 		_ = s.itemRepository.UpdateItem(*item)
 		return nil, fmt.Errorf("failed to create inquiry transaction log: %w", err)
 	}
-	return &inquiry, nil
+
+	response := &model.CreateInquiryTransactionResponse{
+		Message:      "Inquiry transaction created successfully",
+		ID:           createdTransaction.UUID.String(),
+		EmployeeName: createdTransaction.EmployeeName,
+		Item:         item,
+		Quantity:     createdTransaction.Quantity,
+	}
+
+	return response, nil
 }
 
 func (s *TransactionService) UpdateTransactionStatus(status, uuidStr string) (*model.UpdateTransactionResponse, error) {

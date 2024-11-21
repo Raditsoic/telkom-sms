@@ -13,3 +13,5 @@ var ErrTransactionType = errors.New("invalid transaction type")
 var ErrTransactionNotFound = errors.New("transaction not found")
 
 var ErrItemNotFound = errors.New("item not found")
+
+var ErrStorageNotFound = errors.New("storage not found")
