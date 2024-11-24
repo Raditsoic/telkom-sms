@@ -1,6 +1,6 @@
 $ContainerName = "telkom-sms-psql-1"
-$DbUser = "soic"
-$DbName = "telkom_storage"
+$DbUser = "your_postgres_username"
+$DbName = "your_database_name"
 $ExportPath = ".\"
 $OutputFile = "$ExportPath\transactions.csv"
 

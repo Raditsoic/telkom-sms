@@ -1,8 +1,8 @@
 #!/bin/bash
 
 CONTAINER_NAME="telkom-sms-psql-1"
-DB_USER="soic"
-DB_NAME="telkom_storage"
+DB_USER="your_postgres_username"
+DB_NAME="your_database_name"
 EXPORT_PATH="./"
 OUTPUT_FILE="$EXPORT_PATH/transactions.csv"
 

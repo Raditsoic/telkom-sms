@@ -31,4 +31,14 @@ cd export
 \.export_transaction.ps1
 ```
 
+## **How to see database**
+```sh
+docker exec -i telkom-sms-psql-1 psql -U your_postgres_username -d your_database_name
+```
+
+```sql
+\dt # Kalo mau liat tabel apa aja yg ada
+SELECT * FROM nama_tabel; # Kalo mau liat isi tabel, nama tabel diganti ke nama tabel yg kaya di \dt
+```
+
 
