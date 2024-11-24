@@ -14,4 +14,21 @@ docker-compose --profile seeder up seeder # One time only
 docker-compose up --build seeder
 ```
 
+## **How to export database**
+
+### **Linux**
+
+```sh
+cd export
+chmod +x export_item.sh export_transaction.sh
+./export_item.sh && ./export_transaction.sh
+```
+
+### **Windows**
+```ps1
+cd export
+\.export_item.ps1
+\.export_transaction.ps1
+```
+
 
