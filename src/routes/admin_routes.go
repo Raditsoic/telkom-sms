@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/middleware"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/service"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/utils"
@@ -65,7 +66,7 @@ func AdminRoutes(r *mux.Router, authService *service.AuthService, jwtUtils *util
 		}
 	}).Methods("POST")
 
-	r.Handle("/api/admins", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	r.Handle("/api/admins", middleware.AuthMiddleware(jwtUtils, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		getAdmins, err := authService.GetAdmin()
 		if err != nil {
 			log.Printf("Error getting admins: %v", err)
@@ -78,9 +79,9 @@ func AdminRoutes(r *mux.Router, authService *service.AuthService, jwtUtils *util
 			log.Printf("Error encoding response: %v", err)
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		}
-	})).Methods("GET")
+	}))).Methods("GET")
 
-	r.HandleFunc("/api/admin/{id}", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	r.Handle("/api/admin/{id}", middleware.AuthMiddleware(jwtUtils, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["id"]
 
@@ -100,5 +101,5 @@ func AdminRoutes(r *mux.Router, authService *service.AuthService, jwtUtils *util
 			log.Printf("Error encoding response: %v", err)
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		}
-	})).Methods("DELETE")
+	}))).Methods("DELETE")
 }

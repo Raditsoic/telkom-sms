@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/middleware"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/service"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/utils"
@@ -45,7 +46,7 @@ func ItemRoutes(r *mux.Router, itemService *service.ItemService, jwtUtils *utils
 		}
 	}).Methods("GET")
 
-	r.HandleFunc("/api/item/{id}", func(w http.ResponseWriter, r *http.Request) {
+	r.Handle("/api/item/{id}", middleware.AuthMiddleware(jwtUtils, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["id"]
 
@@ -64,9 +65,9 @@ func ItemRoutes(r *mux.Router, itemService *service.ItemService, jwtUtils *utils
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 			return
 		}
-	}).Methods("DELETE")
+	}))).Methods("DELETE")
 
-	r.HandleFunc("/api/item", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	r.Handle("/api/item", middleware.AuthMiddleware(jwtUtils, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var item model.Item
 		if err := json.NewDecoder(r.Body).Decode(&item); err != nil {
 			http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -86,9 +87,9 @@ func ItemRoutes(r *mux.Router, itemService *service.ItemService, jwtUtils *utils
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 			return
 		}
-	})).Methods("POST")
+	}))).Methods("POST")
 
-	r.HandleFunc("/api/item/{id}", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	r.Handle("/api/item/{id}", middleware.AuthMiddleware(jwtUtils, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["id"]
 
@@ -121,5 +122,5 @@ func ItemRoutes(r *mux.Router, itemService *service.ItemService, jwtUtils *utils
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 			return
 		}
-	})).Methods("PATCH")
+	}))).Methods("PATCH")
 }

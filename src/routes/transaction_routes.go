@@ -10,7 +10,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	// "gtihub.com/raditsoic/telkom-storage-ms/src/middleware"
+	"gtihub.com/raditsoic/telkom-storage-ms/src/middleware"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/model"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/service"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/utils"
@@ -203,7 +203,7 @@ func TransactionRoutes(r *mux.Router, transactionService *service.TransactionSer
 	// 	}
 	// }))).Methods("PATCH")
 
-	r.HandleFunc("/api/transaction/{uuid}/{status}", (func(w http.ResponseWriter, r *http.Request) {
+	r.Handle("/api/transaction/{uuid}/{status}", middleware.AuthMiddleware(jwtUtils, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		uuid := mux.Vars(r)["uuid"]
 		status := mux.Vars(r)["status"]
 		transaction, err := transactionService.UpdateTransactionStatus(status, uuid)
@@ -225,9 +225,9 @@ func TransactionRoutes(r *mux.Router, transactionService *service.TransactionSer
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 			return
 		}
-	})).Methods("PATCH")
+	}))).Methods("PATCH")
 
-	r.HandleFunc("/api/transaction/{uuid}", (func(w http.ResponseWriter, r *http.Request) {
+	r.Handle("/api/transaction/{uuid}", middleware.AuthMiddleware(jwtUtils, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		uuid := mux.Vars(r)["uuid"]
 		response, err := transactionService.DeleteTransaction(uuid)
 		if err != nil {
@@ -244,5 +244,5 @@ func TransactionRoutes(r *mux.Router, transactionService *service.TransactionSer
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 			return
 		}
-	})).Methods("DELETE")
+	}))).Methods("DELETE")
 }
