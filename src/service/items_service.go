@@ -86,3 +86,7 @@ func (service *ItemService) UpdateItemName(id, new_name string) (*model.UpdateCa
 
 	return response, nil
 }
+
+func (service *ItemService) ExportItems () ([]model.ExportItem, error) {
+	return service.itemRepository.ExportItems()
+}

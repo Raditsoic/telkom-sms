@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/middleware"
@@ -160,9 +162,9 @@ func TransactionRoutes(r *mux.Router, transactionService *service.TransactionSer
 			Notes:              r.FormValue("notes"),
 			Image:              imageData,
 			ItemRequest: model.ItemRequestDTO{
-				Name:     r.FormValue("item_name"),
-				Quantity: quantity,
-				Shelf:    r.FormValue("shelf"),
+				Name:       r.FormValue("item_name"),
+				Quantity:   quantity,
+				Shelf:      r.FormValue("shelf"),
 				CategoryID: uint(categoryID),
 			},
 		}
@@ -245,4 +247,82 @@ func TransactionRoutes(r *mux.Router, transactionService *service.TransactionSer
 			return
 		}
 	}))).Methods("DELETE")
+
+	r.HandleFunc("/api/transactions/export", func(w http.ResponseWriter, r *http.Request) {
+		startTimeParam := r.URL.Query().Get("from")
+		endTimeParam := r.URL.Query().Get("to")
+
+		var startTime, endTime time.Time
+    	var err error
+
+		if startTimeParam == "" {
+        // Default to a reasonable past time, e.g., 1 year ago
+			startTime = time.Now().AddDate(-1, 0, 0)
+		} else {
+			startTime, err = time.Parse(time.RFC3339, startTimeParam)
+			if err != nil {
+				http.Error(w, "Invalid start time format. Use RFC3339 (e.g., 2024-12-05T00:00:00Z)", http.StatusBadRequest)
+				return
+			}
+		}
+
+		if endTimeParam == "" {
+			endTime = time.Now()
+		} else {
+			endTime, err = time.Parse(time.RFC3339, endTimeParam)
+			if err != nil {
+				http.Error(w, "Invalid end time format. Use RFC3339 (e.g., 2024-12-05T23:59:59Z)", http.StatusBadRequest)
+				return
+			}
+    	}
+
+		transactions, err := transactionService.ExportTransactions(startTime, endTime)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Disposition", "attachment; filename=combined_transactions.csv")
+		w.Header().Set("Content-Type", "text/csv")
+
+		writer := csv.NewWriter(w)
+		defer writer.Flush()
+
+		header := []string{
+			"TransactionType", "ID", "UUID", "EmployeeName", "EmployeeDepartment", "EmployeePosition",
+			"CategoryName", "ItemName", "Quantity", "Status", "Notes", "Time", "ItemID",
+			"LoanTime", "ReturnTime", "CompletedTime", "ReturnedTime", "Image",
+		}
+		if err := writer.Write(header); err != nil {
+			http.Error(w, "Failed to write CSV header", http.StatusInternalServerError)
+			return
+		}
+
+		for _, t := range transactions {
+			row := []string{
+				t.TransactionType,
+				fmt.Sprintf("%d", t.ID),
+				t.UUID,
+				t.EmployeeName,
+				t.EmployeeDepartment,
+				t.EmployeePosition,
+				t.CategoryName.String,
+				t.ItemName.String,
+				fmt.Sprintf("%d", t.Quantity.Int32),
+				t.Status,
+				t.Notes.String,
+				t.Time.Time.Format(time.RFC3339),
+				fmt.Sprintf("%d", t.ItemID.Int32),
+				t.LoanTime.Time.Format(time.RFC3339),
+				t.ReturnTime.Time.Format(time.RFC3339),
+				t.CompletedTime.Time.Format(time.RFC3339),
+				t.ReturnedTime.Time.Format(time.RFC3339),
+				t.Image.String,
+			}
+			if err := writer.Write(row); err != nil {
+				http.Error(w, "Failed to write CSV row", http.StatusInternalServerError)
+				return
+			}
+		}
+	}).Methods("GET")
 }

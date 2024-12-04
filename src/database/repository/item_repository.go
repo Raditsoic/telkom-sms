@@ -73,4 +73,24 @@ func (repo *ItemRepository) GetItemByName(name string) (*model.Item, error) {
 	return &item, nil
 }
 
+func (repo *ItemRepository) ExportItems() ([]model.ExportItem, error) {
+	query := `
+		SELECT
+			i.id AS item_id,
+			c.name AS category_name,
+			i.name AS item_name,
+			i.quantity,
+			i.shelf
+		FROM items i
+		LEFT JOIN categories c ON i.category_id = c.id
+	`
+
+	var results []model.ExportItem
+	if err := repo.db.Raw(query).Scan(&results).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch items: %w", err)
+	}
+
+	return results, nil
+}
+
 

@@ -124,7 +124,6 @@ func (s *TransactionService) GetTransactions(page, limit int) ([]model.GetAllTra
 	return transactions, nil
 }
 
-
 func (s *TransactionService) CreateInsertionTransaction(dto *model.CreateInsertionTransactionDTO) (*model.CreateInsertionTransactionResponse, error) {
 	if dto == nil {
 		return nil, fmt.Errorf("dto cannot be nil")
@@ -141,8 +140,8 @@ func (s *TransactionService) CreateInsertionTransaction(dto *model.CreateInserti
 		Status:             "pending",
 		Image:              dto.Image,
 		ItemRequest:        dto.ItemRequest,
-		ItemID:             nil, 
-		Item:               nil, 
+		ItemID:             nil,
+		Item:               nil,
 	}
 
 	createdTransaction, err := s.logRepository.CreateInsertionTransaction(transaction)
@@ -177,7 +176,7 @@ func (s *TransactionService) CreateLoanTransaction(loan model.LoanTransaction) (
 	loan.Time = time.Now()
 	loan.Status = "pending"
 
-	createdTransaction, err := s.logRepository.CreateLoanTransaction(loan); 
+	createdTransaction, err := s.logRepository.CreateLoanTransaction(loan)
 	if err != nil {
 		item.Quantity += loan.Quantity
 		_ = s.itemRepository.UpdateItem(*item)
@@ -470,4 +469,8 @@ func (s *TransactionService) deleteInsertionTransaction(uuid uuid.UUID) (*model.
 		Message: "Insertion transaction deleted successfully",
 		ID:      uuid.String(),
 	}, nil
+}
+
+func (s *TransactionService) ExportTransactions(from, to time.Time) ([]model.ExportTransaction, error) {
+	return s.logRepository.ExportTransactions(from, to)
 }

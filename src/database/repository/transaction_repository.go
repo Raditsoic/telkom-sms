@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -139,5 +140,89 @@ func (repository *TransactionRepository) DeleteInsertionTransactionByUUID(uuid u
 	return nil
 }
 
+func (repository *TransactionRepository) ExportTransactions(from, to time.Time) ([]model.ExportTransaction, error) {
+	query := `
+		SELECT 
+			'LoanTransaction' AS transaction_type,
+			lt.id,
+			lt.uuid,
+			lt.employee_name,
+			lt.employee_department,
+			lt.employee_position,
+			c.name AS category_name,
+			i.name AS item_name,
+			lt.quantity,
+			lt.status,
+			lt.notes,
+			lt.time,
+			lt.item_id,
+			lt.loan_time,
+			lt.return_time,
+			lt.completed_time,
+			lt.returned_time,
+			NULL::TEXT AS image
+		FROM loan_transactions lt
+		LEFT JOIN items i ON lt.item_id = i.id
+		LEFT JOIN categories c ON i.category_id = c.id
+		WHERE lt.time BETWEEN ? AND ?
 
+		UNION ALL
 
+		SELECT 
+			'InquiryTransaction' AS transaction_type,
+			it.id,
+			it.uuid,
+			it.employee_name,
+			it.employee_department,
+			it.employee_position,
+			c.name AS category_name,
+			i.name AS item_name,
+			it.quantity,
+			it.status,
+			it.notes,
+			it.time,
+			it.item_id,
+			NULL,
+			NULL,
+			it.completed_time,
+			NULL,
+			NULL::TEXT AS image
+		FROM inquiry_transactions it
+		LEFT JOIN items i ON it.item_id = i.id
+		LEFT JOIN categories c ON i.category_id = c.id
+		WHERE it.time BETWEEN ? AND ?
+
+		UNION ALL
+
+		SELECT 
+			'InsertionTransaction' AS transaction_type,
+			int.id,
+			int.uuid,
+			int.employee_name,
+			int.employee_department,
+			int.employee_position,
+			c.name AS category_name,
+			i.name AS item_name,
+			int.item_request_quantity AS quantity,
+			int.status,
+			int.notes,
+			int.time,
+			int.item_id,
+			NULL,
+			NULL,
+			int.completed_time,
+			NULL,
+			ENCODE(int.image, 'base64') AS image
+		FROM insertion_transactions int
+		LEFT JOIN items i ON int.item_id = i.id
+		LEFT JOIN categories c ON i.category_id = c.id
+		WHERE int.time BETWEEN ? AND ?
+	`
+
+	var results []model.ExportTransaction
+	if err := repository.db.Raw(query, from, to, from, to, from, to).Scan(&results).Error; err != nil {
+		return nil, fmt.Errorf("failed to execute combined transactions query: %w", err)
+	}
+
+	return results, nil
+}
