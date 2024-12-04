@@ -1,9 +1,11 @@
 package routes
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"gtihub.com/raditsoic/telkom-storage-ms/src/middleware"
@@ -123,4 +125,41 @@ func ItemRoutes(r *mux.Router, itemService *service.ItemService, jwtUtils *utils
 			return
 		}
 	}))).Methods("PATCH")
+
+	r.HandleFunc("/api/items/export", func(w http.ResponseWriter, r *http.Request) {
+		items, err := itemService.ExportItems()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Disposition", "attachment; filename=combined_transactions.csv")
+		w.Header().Set("Content-Type", "text/csv")
+
+		writer := csv.NewWriter(w)
+		defer writer.Flush()
+
+		header := []string{
+			"Item ID", "Category Name", "Item Name", "Quantity", "Shelf",
+		}
+		if err := writer.Write(header); err != nil {
+			http.Error(w, "Failed to write CSV header", http.StatusInternalServerError)
+			return
+		}
+
+		for _, item := range items {
+			record := []string{
+				strconv.Itoa(item.ItemID),
+				item.CategoryName,
+				item.ItemName,
+				strconv.Itoa(item.Quantity),
+				item.Shelf,
+			}
+
+			if err := writer.Write(record); err != nil {
+				http.Error(w, "Failed to write CSV record", http.StatusInternalServerError)
+				return
+			}
+		}
+	}).Methods("GET")
 }

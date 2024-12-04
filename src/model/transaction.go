@@ -1,6 +1,7 @@
 package model
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -53,7 +54,7 @@ type InsertionTransaction struct {
 	Notes              string         `json:"notes"`
 	Time               time.Time      `json:"time"`
 	Image              []byte         `json:"image"`
-	ItemID             *uint          `json:"item_id"` 
+	ItemID             *uint          `json:"item_id"`
 	Item               *Item          `gorm:"foreignKey:ItemID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"item"`
 	ItemRequest        ItemRequestDTO `gorm:"embedded;embeddedPrefix:item_request_" json:"item_request"`
 	CompletedTime      *time.Time     `json:"completed_time"`
@@ -145,4 +146,25 @@ type UpdateTransactionResponse struct {
 type DeleteTransactionResponse struct {
 	Message string `json:"message"`
 	ID      string `json:"id"`
+}
+
+type ExportTransaction struct {
+	TransactionType    string
+	ID                 int
+	UUID               string
+	EmployeeName       string
+	EmployeeDepartment string
+	EmployeePosition   string
+	CategoryName       sql.NullString
+	ItemName           sql.NullString
+	Quantity           sql.NullInt32
+	Status             string
+	Notes              sql.NullString
+	Time               sql.NullTime
+	ItemID             sql.NullInt32
+	LoanTime           sql.NullTime
+	ReturnTime         sql.NullTime
+	CompletedTime      sql.NullTime
+	ReturnedTime       sql.NullTime
+	Image              sql.NullString
 }

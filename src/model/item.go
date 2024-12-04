@@ -16,7 +16,7 @@ type Item struct {
 // Delete Item
 type DeleteItemResponse struct {
 	Message string `json:"message"`
-	ID      string   `json:"id"`
+	ID      string `json:"id"`
 }
 
 // Update Item Name
@@ -29,6 +29,14 @@ type UpdateItemNameResponse struct {
 	OldName string `json:"old_name"`
 	Message string `json:"message"`
 	ID      string `json:"id"`
+}
+
+type ExportItem struct {
+	ItemID       int    `json:"item_id"`
+	CategoryName string `json:"category_name"`
+	ItemName     string `json:"item_name"`
+	Quantity     int    `json:"quantity"`
+	Shelf        string `json:"shelf"`
 }
 
 /*
